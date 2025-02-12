@@ -49,6 +49,31 @@ int main(int, char**)
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
+        // window for the render
+        ImGui::Begin("Render");
+
+        // Get the current window's drawing position and size
+        ImVec2 pos = ImGui::GetCursorScreenPos();
+        ImVec2 windowSize = ImGui::GetContentRegionAvail();
+
+        // Calculate square size at 80% of the window's size
+        float squareSize = std::min(windowSize.x, windowSize.y) * 0.8f;
+
+        // Center the square in the window
+        pos.x += (windowSize.x - squareSize) * 0.5f;
+        pos.y += (windowSize.y - squareSize) * 0.5f;
+
+        // draw
+        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+        draw_list->AddRectFilled(
+            pos,
+            ImVec2(pos.x + squareSize, pos.y + squareSize),
+            IM_COL32(0, 255, 0, 255)
+        );
+
+        ImGui::End();
+
+
         // Create a simple window
         ImGui::Begin("Hello, world!");
         ImGui::Text("This is some useful text.");
