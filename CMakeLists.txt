@@ -8,13 +8,17 @@ set(CMAKE_CXX_COMPILER "/usr/bin/g++")
 # set(CMAKE_TOOLCHAIN_FILE "/Users/tadzio/git/vcpkg/scripts/buildsystems/vcpkg.cmake")
 
 # Find packages
-find_package(fmt CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
+# find_package(glad CONFIG REQUIRED)
+find_package(OpenGL REQUIRED)
 
 # Add the executable
 add_executable(raytracer main.cpp)
 
 # Link libraries
-target_link_libraries(raytracer PRIVATE fmt::fmt imgui::imgui glfw)
+target_link_libraries(raytracer PRIVATE 
+    imgui::imgui
+    glfw
+    OpenGL::GL)
 

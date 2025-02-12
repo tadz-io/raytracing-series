@@ -9,6 +9,9 @@
     },
     {
       "name": "glfw3"
+    },
+    {
+      "name": "glad"
     }
   ]
 }
