@@ -8,6 +8,11 @@
 
 int main(int, char**)
 {
+    auto ASPECT_RATIO = 16.0 / 9.0;
+    int IMAGE_WIDTH = 400;
+    // Calculate image height and ensure >= 1
+    int IMAGE_HEIGHT = int(IMAGE_WIDTH / ASPECT_RATIO);
+    IMAGE_HEIGHT = (IMAGE_HEIGHT < 1) ? 1 : IMAGE_HEIGHT;
     // Setup window
     if (!glfwInit())
         return -1;
@@ -32,7 +37,7 @@ int main(int, char**)
     glBindTexture(GL_TEXTURE_2D, textureID);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, IMAGE_WIDTH, IMAGE_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -44,7 +49,7 @@ int main(int, char**)
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    std::vector<uint32_t> buffer(width * height);
+    std::vector<uint32_t> buffer(IMAGE_WIDTH * IMAGE_HEIGHT);
     // Main loop
     while (!glfwWindowShouldClose(window))
     {
@@ -58,14 +63,13 @@ int main(int, char**)
 
         ImGui::Begin("Render");
         if (ImGui::Button("Render")) {
-            render(buffer);
-            write_to_ppm(buffer, "render.ppm");
+            render(IMAGE_WIDTH, IMAGE_HEIGHT, buffer);
+            write_to_ppm(IMAGE_WIDTH, IMAGE_HEIGHT, buffer, "render.ppm");
             // Update texture with new render
             glBindTexture(GL_TEXTURE_2D, textureID);
-            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data());
-            std::cout << "Rendered color: 0x" << std::hex << buffer[126 * width + 126] << std::dec << std::endl;
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, IMAGE_WIDTH, IMAGE_HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data());
         }
-        ImGui::Image((ImTextureID)textureID, ImVec2(width, height));
+        ImGui::Image((ImTextureID)textureID, ImVec2(IMAGE_WIDTH, IMAGE_HEIGHT));
         ImGui::End();
 
         // window for the render
