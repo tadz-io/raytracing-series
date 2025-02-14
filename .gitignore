@@ -2,3 +2,11 @@
 /build
 /main.dSYM
 /vcpkg_installed
+
+# local files
+.vscode/
+.DS_Store
+
+# data files
+*.ppm
+imgui.ini
