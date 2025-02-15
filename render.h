@@ -5,11 +5,24 @@
 #include <cmath>
 #include <fstream>
 
+bool hit_sphere(const point3& center, double radius, const ray& r) {
+    vec3 oc = center - r.origin();
+    auto a = dot(r.direction(), r.direction());
+    auto b = dot(-2 * r.direction(), oc);
+    auto c = dot(oc, oc) - (radius * radius);
+    auto discriminant = b*b - 4*a*c;
+    return (discriminant >= 0);
+}
+
 color ray_color(const ray& r) {
+    if (hit_sphere(point3(0,0,-1), 0.5, r)){
+        return color(1, 0, 0);
+    }
+
     vec3 unit_direction = unit_vector(r.direction());
-    auto a = sqrt(unit_direction.y() * unit_direction.x());
-    // return (1.0 - a) * color(1.0, 1.0, 1.0) + a * color(0.5, 0.7, 1.0);
-    return a * color(1.0, 1.0, 1.0);
+    auto a = 0.5 * (unit_direction.y() + 1);
+    return (1.0 - a) * color(1.0, 1.0, 1.0) + a * color(0.5, 0.7, 1.0);
+
 }
 
 void render(int image_width, int image_height, std::vector<u_int32_t>& buffer) {
