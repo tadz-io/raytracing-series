@@ -23,6 +23,11 @@ int main(int, char**)
     // create buffer to write rendered image to
     std::vector<uint32_t> buffer(image_width * image_height);
 
+    // Variables for camera center coordinates
+    double center_x = 0.0;
+    double center_y = 0.0;
+    double center_z = 0.0;
+
     // Setup window
     if (!glfwInit())
         return -1;
@@ -72,6 +77,17 @@ int main(int, char**)
         ImGui::NewFrame();
 
         ImGui::Begin("Render");
+
+        // Input text boxes for camera center coordinates
+        if (ImGui::InputDouble("x: ", &center_x) || ImGui::InputDouble("y: ", &center_y) || ImGui::InputDouble("z: ", &center_z)) {
+            cam.set_center_point(point3(center_x, center_y, center_z));
+            cam.render(world, buffer);
+            write_to_ppm(image_width, image_height, buffer, "render.ppm");
+            // Update texture with new render
+            glBindTexture(GL_TEXTURE_2D, textureID);
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image_width, image_height, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data());
+        }
+
         if (ImGui::Button("Render")) {
             cam.render(world, buffer);
             write_to_ppm(image_width, image_height, buffer, "render.ppm");
