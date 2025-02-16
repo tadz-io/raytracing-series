@@ -8,11 +8,21 @@
 
 int main(int, char**)
 {
-    auto ASPECT_RATIO = 16.0 / 9.0;
-    int IMAGE_WIDTH = 400;
-    // Calculate image height and ensure >= 1
-    int IMAGE_HEIGHT = int(IMAGE_WIDTH / ASPECT_RATIO);
-    IMAGE_HEIGHT = (IMAGE_HEIGHT < 1) ? 1 : IMAGE_HEIGHT;
+    hittable_list world;
+
+    world.add(make_shared<sphere>(point3(0,0,-1), 0.5));
+    world.add(make_shared<sphere>(point3(0,-100.5,-1), 100));
+
+    double aspect_ratio {16.0 / 9.0};
+    int image_width {800};
+    
+    // setup camera model
+    camera cam(aspect_ratio, image_width);
+    // get image height
+    int image_height {cam.get_image_height()};  
+    // create buffer to write rendered image to
+    std::vector<uint32_t> buffer(image_width * image_height);
+
     // Setup window
     if (!glfwInit())
         return -1;
@@ -37,7 +47,7 @@ int main(int, char**)
     glBindTexture(GL_TEXTURE_2D, textureID);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, IMAGE_WIDTH, IMAGE_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -49,7 +59,7 @@ int main(int, char**)
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    std::vector<uint32_t> buffer(IMAGE_WIDTH * IMAGE_HEIGHT);
+    
     // Main loop
     while (!glfwWindowShouldClose(window))
     {
@@ -63,13 +73,13 @@ int main(int, char**)
 
         ImGui::Begin("Render");
         if (ImGui::Button("Render")) {
-            render(IMAGE_WIDTH, IMAGE_HEIGHT, buffer);
-            write_to_ppm(IMAGE_WIDTH, IMAGE_HEIGHT, buffer, "render.ppm");
+            cam.render(world, buffer);
+            write_to_ppm(image_width, image_height, buffer, "render.ppm");
             // Update texture with new render
             glBindTexture(GL_TEXTURE_2D, textureID);
-            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, IMAGE_WIDTH, IMAGE_HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data());
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image_width, image_height, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data());
         }
-        ImGui::Image((ImTextureID)textureID, ImVec2(IMAGE_WIDTH, IMAGE_HEIGHT));
+        ImGui::Image((ImTextureID)textureID, ImVec2(image_width, image_height));
         ImGui::End();
 
         // window for the render
