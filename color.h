@@ -28,7 +28,7 @@ void write_color(std::vector<uint32_t>& buffer, int x, int y, int width, const c
         int b = (buffer[index] >> 16) & 0xFF;
         int g = (buffer[index] >> 8)  & 0xFF;
         int r =  buffer[index]        & 0xFF;
-        std::cout << "buffer write: R=" << r << " G=" << g << " B=" << b << std::endl;
-        std::cout << "Packed value: 0x" << std::hex << buffer[index] << std::dec << std::endl;
+        // std::cout << "buffer write: R=" << r << " G=" << g << " B=" << b << std::endl;
+        // std::cout << "Packed value: 0x" << std::hex << buffer[index] << std::dec << std::endl;
     }
 }
