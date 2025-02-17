@@ -79,7 +79,8 @@ class camera {
         color ray_color(const ray& r, const hittable& world) const {
             hit_record rec;
             if (world.hit(r, interval(0, infinity), rec)){
-                return 0.5 * (rec.normal + color(1,1,1));
+                // return 0.5 * (rec.normal + color(1,1,1));
+                return (rec.normal_angle / pi) * color(0.1, 1, 0.2);
             }
             
             vec3 unit_direction = unit_vector(r.direction());

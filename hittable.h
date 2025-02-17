@@ -8,12 +8,20 @@ class hit_record {
         vec3 normal; // normal vector at intersection point
         double t; // parameter `t` of ray at the intersection point
         bool front_face; // is the ray hitting from outside the material
+        double normal_angle;
 
         void set_face_normal(const ray& r, const vec3& outward_normal) {
             // set the hit record normal vector
 
             front_face = dot(r.direction(), outward_normal) < 0;
             normal = front_face ? outward_normal : -outward_normal;
+        }
+
+        void set_normal_angle(const ray& r, const vec3& outward_normal) {
+            // this is the unit direction vector of the ray (|ray_direction| = 1)
+            vec3 ray_direction = unit_vector(r.direction());
+            double angle = acos(dot(ray_direction, outward_normal));
+            normal_angle = angle;
         }
 };
 
