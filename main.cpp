@@ -18,7 +18,7 @@ int main(int, char**)
     
     // setup camera model
     camera cam(aspect_ratio, image_width);
-    cam.samples_per_pixel = 1;
+    cam.samples_per_pixel = 100;
     // get image height
     int image_height {cam.get_image_height()};  
     // create buffer to write rendered image to
