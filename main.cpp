@@ -27,7 +27,8 @@ int main(int, char**)
     double center_x = 0.0;
     double center_y = 0.0;
     double center_z = 0.0;
-
+    // focal length
+    double focal_length = 1.0;
     // Setup window
     if (!glfwInit())
         return -1;
@@ -71,60 +72,75 @@ int main(int, char**)
         // Poll and handle events
         glfwPollEvents();
 
+        // Define a small step value for camera movement.
+        const double step = 0.1;
+        bool updated = false;
+
+        // Check arrow keys and update camera center coordinates.
+        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+            center_x -= step;
+            updated = true;
+        }
+        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+            center_x += step;
+            updated = true;
+        }
+        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+            center_y += step;
+            updated = true;
+        }
+        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+            center_y -= step;
+            updated = true;
+        }
+
+        // If any arrow key was pressed, update the camera and re-render.
+        if (updated) {
+            cam.set_center_point(point3(center_x, center_y, center_z));
+            cam.render(world, buffer);
+            // Update texture with new render
+            glBindTexture(GL_TEXTURE_2D, textureID);
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image_width, image_height, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data());
+        }
+
+
         // Start the ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        ImGui::Begin("Render");
-
+        ImGui::Begin("Settings");
         // Input text boxes for camera center coordinates
         if (ImGui::InputDouble("x: ", &center_x) || ImGui::InputDouble("y: ", &center_y) || ImGui::InputDouble("z: ", &center_z)) {
             cam.set_center_point(point3(center_x, center_y, center_z));
             cam.render(world, buffer);
-            write_to_ppm(image_width, image_height, buffer, "render.ppm");
+            // write_to_ppm(image_width, image_height, buffer, "render.ppm");
             // Update texture with new render
             glBindTexture(GL_TEXTURE_2D, textureID);
             glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image_width, image_height, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data());
         }
 
+        if (ImGui::InputDouble("focal length: ", &focal_length)) {
+            cam.set_focal_length(focal_length);
+            cam.render(world, buffer);
+            
+            // Updatge texture with new render
+            glBindTexture(GL_TEXTURE_2D, textureID);
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image_width, image_height, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data());
+        }
+        ImGui::End();
+
+        ImGui::Begin("Render");
+
+
         if (ImGui::Button("Render")) {
             cam.render(world, buffer);
-            write_to_ppm(image_width, image_height, buffer, "render.ppm");
+            //write_to_ppm(image_width, image_height, buffer, "render.ppm");
             // Update texture with new render
             glBindTexture(GL_TEXTURE_2D, textureID);
             glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image_width, image_height, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data());
         }
         ImGui::Image((ImTextureID)textureID, ImVec2(image_width, image_height));
-        ImGui::End();
-
-        // window for the render
-        ImGui::Begin("Render geometry");
-
-        // Get the current window's drawing position and size
-        ImVec2 pos = ImGui::GetCursorScreenPos();
-        ImVec2 windowSize = ImGui::GetContentRegionAvail();
-
-        // Calculate square size at 80% of the window's size
-        float squareSize = std::min(windowSize.x, windowSize.y) * 0.8f;
-
-        // Center the square in the window
-        pos.x += (windowSize.x - squareSize) * 0.5f;
-        pos.y += (windowSize.y - squareSize) * 0.5f;
-
-        // draw
-        ImDrawList* draw_list = ImGui::GetWindowDrawList();
-        draw_list->AddRectFilled(
-            pos,
-            ImVec2(pos.x + squareSize, pos.y + squareSize),
-            IM_COL32(0, 255, 0, 255)
-        );
-
-        ImGui::End();
-
-        // Create a simple window
-        ImGui::Begin("Hello, world!");
-        ImGui::Text("This is some useful text.");
         ImGui::End();
 
         // Rendering

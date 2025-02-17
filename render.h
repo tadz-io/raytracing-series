@@ -12,8 +12,8 @@ class camera {
         // public camera parameters
         double aspect_ratio;
         int image_width;
-        // camera center point
-        point3 center = point3(0, 0, 0);          
+        point3 center = point3(0, 0, 0);    // camera center point
+        double focal_length = 1.0;
 
         camera(): aspect_ratio(1.0), image_width(100) {
             initialize();
@@ -29,6 +29,10 @@ class camera {
 
         void set_center_point(point3 new_center) {
             center = new_center;
+        }
+
+        void set_focal_length(double new_focal_length) {
+            focal_length = new_focal_length;
         }
         
         void render(const hittable& world, std::vector<u_int32_t>& buffer) {
@@ -59,7 +63,6 @@ class camera {
             
 
             // viewport parameters
-            auto focal_length = 1.0;
             auto viewport_height = 2.0;
             auto viewport_width = viewport_height * (double(image_width)/image_height);
             auto viewport_u = vec3(viewport_width, 0, 0);
