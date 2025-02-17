@@ -12,6 +12,7 @@ class camera {
         // public camera parameters
         double aspect_ratio;
         int image_width;
+        int samples_per_pixel = 10;
         point3 center = point3(0, 0, 0);    // camera center point
         double focal_length = 1.0;
 
@@ -26,20 +27,20 @@ class camera {
         int get_image_height() const {
             return image_height;
         }
-
-        void set_center_point(point3 new_center) {
-            center = new_center;
-        }
-
-        void set_focal_length(double new_focal_length) {
-            focal_length = new_focal_length;
-        }
         
         void render(const hittable& world, std::vector<u_int32_t>& buffer) {
             initialize();
+            
             // render and write to buffer
             for (int j = 0; j < image_height; j++) {
                 for (int i = 0; i < image_width; i++) {
+                    // color pixel_color(0,0,0);
+                    // for (int sample = 0; sample < samples_per_pixel; sample++) {
+                    //     ray r = get_ray(i, j);
+                    //     pixel_color += ray_color(r, world);
+                    // }
+                    // write_color(buffer, i, j, image_width, pixel_samples_scale * pixel_color);
+                    
                     auto pixel_center = pixel00_loc + (i * pixel_delta_u) + (j * pixel_delta_v);
                     auto ray_direction = pixel_center - center;
                     ray r(center, ray_direction);
@@ -51,16 +52,39 @@ class camera {
 
         }
 
+        ray get_ray(int i, int j) const {
+            // construct a camera ray originating from the origin and directed at a randomely
+            // sampled point around the pixel at location (i, j)
+            auto offset = sample_square();
+            auto pixel_sample = pixel00_loc
+                                + ((i + offset.x()) * pixel_delta_u)
+                                + ((j + offset.y()) * pixel_delta_v);
+            
+            auto ray_origin = center;
+            auto ray_direction = pixel_sample - ray_origin;
+
+            return ray(ray_origin, ray_direction);
+
+        }
+
+        vec3 sample_square() const {
+            // returns a vector in the [-.5,-.5] - [+.5,+.5] unit square
+            return vec3(random_double() - 0.5, random_double() - 0.5, 0);
+        }
+
     private:
-        int image_height;       // rendered image height
-        point3 pixel00_loc;     // location of pixel (0, 0) 
-        vec3 pixel_delta_u;     // pixel spacing in horizontal
-        vec3 pixel_delta_v;     // pixel spacing in vertical direction
+        int image_height;           // rendered image height
+        double pixel_samples_scale; // scaling factor for rgb values
+        point3 pixel00_loc;         // location of pixel (0, 0) 
+        vec3 pixel_delta_u;         // pixel spacing in horizontal
+        vec3 pixel_delta_v;         // pixel spacing in vertical direction
 
         void initialize() {
             image_height = int(image_width / aspect_ratio);
             image_height = (image_height < 1) ? 1 : image_height;
             
+            // calculate scaling factor for rgb values
+            pixel_samples_scale = 1.0 / samples_per_pixel;
 
             // viewport parameters
             auto viewport_height = 2.0;

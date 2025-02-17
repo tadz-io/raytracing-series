@@ -18,6 +18,7 @@ int main(int, char**)
     
     // setup camera model
     camera cam(aspect_ratio, image_width);
+    cam.samples_per_pixel = 1;
     // get image height
     int image_height {cam.get_image_height()};  
     // create buffer to write rendered image to
@@ -96,7 +97,7 @@ int main(int, char**)
 
         // If any arrow key was pressed, update the camera and re-render.
         if (updated) {
-            cam.set_center_point(point3(center_x, center_y, center_z));
+            cam.center = (point3(center_x, center_y, center_z));
             cam.render(world, buffer);
             // Update texture with new render
             glBindTexture(GL_TEXTURE_2D, textureID);
@@ -112,7 +113,7 @@ int main(int, char**)
         ImGui::Begin("Settings");
         // Input text boxes for camera center coordinates
         if (ImGui::InputDouble("x: ", &center_x) || ImGui::InputDouble("y: ", &center_y) || ImGui::InputDouble("z: ", &center_z)) {
-            cam.set_center_point(point3(center_x, center_y, center_z));
+            cam.center = point3(center_x, center_y, center_z);
             cam.render(world, buffer);
             // write_to_ppm(image_width, image_height, buffer, "render.ppm");
             // Update texture with new render
@@ -121,7 +122,7 @@ int main(int, char**)
         }
 
         if (ImGui::InputDouble("focal length: ", &focal_length)) {
-            cam.set_focal_length(focal_length);
+            cam.focal_length = focal_length;
             cam.render(world, buffer);
             
             // Updatge texture with new render
