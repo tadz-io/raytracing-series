@@ -2,10 +2,13 @@
 
 #include "constants.h"
 
+class material;
+
 class hit_record {
     public:
         point3 p; // point of intersection
         vec3 normal; // normal vector at intersection point
+        shared_ptr<material> mat;
         double t; // parameter `t` of ray at the intersection point
         bool front_face; // is the ray hitting from outside the material
         double normal_angle;
