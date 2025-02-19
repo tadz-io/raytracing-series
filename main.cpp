@@ -18,7 +18,6 @@ int main(int, char**)
     
     // setup camera model
     camera cam(aspect_ratio, image_width);
-    cam.samples_per_pixel = 100;
     // get image height
     int image_height {cam.get_image_height()};  
     // create buffer to write rendered image to
@@ -30,6 +29,9 @@ int main(int, char**)
     double center_z = 0.0;
     // focal length
     double focal_length = 1.0;
+    // sampling
+    int samples_per_pixel = 1;
+    int max_depth = 2;
     // Setup window
     if (!glfwInit())
         return -1;
@@ -104,7 +106,6 @@ int main(int, char**)
             glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image_width, image_height, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data());
         }
 
-
         // Start the ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -112,27 +113,29 @@ int main(int, char**)
 
         ImGui::Begin("Settings");
         // Input text boxes for camera center coordinates
-        if (ImGui::InputDouble("x: ", &center_x) || ImGui::InputDouble("y: ", &center_y) || ImGui::InputDouble("z: ", &center_z)) {
+        if (
+            ImGui::InputDouble("x: ", &center_x) || 
+            ImGui::InputDouble("y: ", &center_y) || 
+            ImGui::InputDouble("z: ", &center_z) ||
+            ImGui::InputDouble("focal length: ", &focal_length) ||
+            ImGui::InputInt("samples per pixel: ", &samples_per_pixel) ||
+            ImGui::InputInt("max depth: ", &max_depth)
+        ){
             cam.center = point3(center_x, center_y, center_z);
+            cam.focal_length = focal_length;
+            cam.samples_per_pixel = samples_per_pixel;
+            cam.max_depth = max_depth;
+
             cam.render(world, buffer);
             // write_to_ppm(image_width, image_height, buffer, "render.ppm");
             // Update texture with new render
             glBindTexture(GL_TEXTURE_2D, textureID);
             glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image_width, image_height, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data());
         }
-
-        if (ImGui::InputDouble("focal length: ", &focal_length)) {
-            cam.focal_length = focal_length;
-            cam.render(world, buffer);
-            
-            // Updatge texture with new render
-            glBindTexture(GL_TEXTURE_2D, textureID);
-            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image_width, image_height, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data());
-        }
         ImGui::End();
 
+        
         ImGui::Begin("Render");
-
 
         if (ImGui::Button("Render")) {
             cam.render(world, buffer);

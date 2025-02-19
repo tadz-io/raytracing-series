@@ -12,8 +12,8 @@ class camera {
         // public camera parameters
         double aspect_ratio;
         int image_width;
-        int samples_per_pixel = 10;
-        int max_depth = 5;
+        int samples_per_pixel = 1;
+        int max_depth = 2;
         point3 center = point3(0, 0, 0);    // camera center point
         double focal_length = 1.0;
 
