@@ -12,12 +12,14 @@ int main(int, char**)
 
     auto material_ground = make_shared<lambertian>(color(0.8, 0.8, 0.0));
     auto material_center = make_shared<lambertian>(color(0.1, 0.2, 0.5));
-    auto material_left   = make_shared<metal>(color(0.1, 0.8, 0.2), 0.3);
-    auto material_right  = make_shared<metal>(color(0.8, 0.6, 0.2), 1.0);
-
+    auto material_left   = make_shared<dielectric>(1.50);
+    auto material_bubble = make_shared<dielectric>(1.00 / 1.50);
+    auto material_right  = make_shared<metal>(color(0.8, 0.6, 0.2), 0.0);
+    
     world.add(make_shared<sphere>(point3( 0.0, -100.5, -1.0), 100.0, material_ground));
     world.add(make_shared<sphere>(point3( 0.0,    0.0, -1.2),   0.5, material_center));
     world.add(make_shared<sphere>(point3(-1.0,    0.0, -1.0),   0.5, material_left));
+    world.add(make_shared<sphere>(point3(-1.0,    0.0, -1.0),   0.4, material_bubble));
     world.add(make_shared<sphere>(point3( 1.0,    0.0, -1.0),   0.5, material_right));
 
     double aspect_ratio {16.0 / 9.0};
@@ -25,19 +27,19 @@ int main(int, char**)
     
     // setup camera model
     camera cam(aspect_ratio, image_width);
+    cam.defocus_angle = 10.0;
+    cam.focus_dist    = 3.4;
     // get image height
     int image_height {cam.get_image_height()};  
     // create buffer to write rendered image to
     std::vector<uint32_t> buffer(image_width * image_height);
 
-    // Variables for camera center coordinates
-    double center_x = 0.0;
-    double center_y = 0.0;
-    double center_z = 0.0;
+    // camera look from position
+    point3 lookfrom = point3(-2,-2,1);
     // focal length
-    double focal_length = 1.0;
+    double vfov = 20;
     // sampling
-    int samples_per_pixel = 1;
+    int samples_per_pixel = 2;
     int max_depth = 2;
     // Setup window
     if (!glfwInit())
@@ -88,25 +90,25 @@ int main(int, char**)
 
         // Check arrow keys and update camera center coordinates.
         if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-            center_x -= step;
+            lookfrom = lookfrom - point3(step, 0, 0);
             updated = true;
         }
         if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-            center_x += step;
+            lookfrom = lookfrom + point3(step, 0, 0);
             updated = true;
         }
         if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-            center_y += step;
+            lookfrom = lookfrom + point3(0, step, 0);
             updated = true;
         }
         if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-            center_y -= step;
+            lookfrom = lookfrom - point3(0, step, 0);
             updated = true;
         }
 
         // If any arrow key was pressed, update the camera and re-render.
         if (updated) {
-            cam.center = (point3(center_x, center_y, center_z));
+            cam.lookfrom = lookfrom;
             cam.render(world, buffer);
             // Update texture with new render
             glBindTexture(GL_TEXTURE_2D, textureID);
@@ -121,15 +123,15 @@ int main(int, char**)
         ImGui::Begin("Settings");
         // Input text boxes for camera center coordinates
         if (
-            ImGui::InputDouble("x: ", &center_x) || 
-            ImGui::InputDouble("y: ", &center_y) || 
-            ImGui::InputDouble("z: ", &center_z) ||
-            ImGui::InputDouble("focal length: ", &focal_length) ||
+            ImGui::InputDouble("x: ", &lookfrom[0]) || 
+            ImGui::InputDouble("y: ", &lookfrom[1]) || 
+            ImGui::InputDouble("z: ", &lookfrom[2]) ||
+            ImGui::InputDouble("fov: ", &vfov) ||
             ImGui::InputInt("samples per pixel: ", &samples_per_pixel) ||
             ImGui::InputInt("max depth: ", &max_depth)
         ){
-            cam.center = point3(center_x, center_y, center_z);
-            cam.focal_length = focal_length;
+            cam.lookfrom = lookfrom;
+            cam.vfov = vfov;
             cam.samples_per_pixel = samples_per_pixel;
             cam.max_depth = max_depth;
 
