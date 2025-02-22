@@ -10,12 +10,13 @@ int main(int, char**)
 {
     hittable_list world;
 
+
     auto material_ground = make_shared<lambertian>(color(0.8, 0.8, 0.0));
     auto material_center = make_shared<lambertian>(color(0.1, 0.2, 0.5));
     auto material_left   = make_shared<dielectric>(1.50);
     auto material_bubble = make_shared<dielectric>(1.00 / 1.50);
-    auto material_right  = make_shared<metal>(color(0.8, 0.6, 0.2), 0.0);
-    
+    auto material_right  = make_shared<metal>(color(0.8, 0.6, 0.2), 1.0);
+
     world.add(make_shared<sphere>(point3( 0.0, -100.5, -1.0), 100.0, material_ground));
     world.add(make_shared<sphere>(point3( 0.0,    0.0, -1.2),   0.5, material_center));
     world.add(make_shared<sphere>(point3(-1.0,    0.0, -1.0),   0.5, material_left));
@@ -23,11 +24,11 @@ int main(int, char**)
     world.add(make_shared<sphere>(point3( 1.0,    0.0, -1.0),   0.5, material_right));
 
     double aspect_ratio {16.0 / 9.0};
-    int image_width {800};
+    int image_width {400};
     
     // setup camera model
     camera cam(aspect_ratio, image_width);
-    cam.defocus_angle = 10.0;
+    cam.defocus_angle = 0.6;
     cam.focus_dist    = 3.4;
     // get image height
     int image_height {cam.get_image_height()};  
@@ -35,7 +36,7 @@ int main(int, char**)
     std::vector<uint32_t> buffer(image_width * image_height);
 
     // camera look from position
-    point3 lookfrom = point3(-2,-2,1);
+    point3 lookfrom = point3(13,2,3);
     // focal length
     double vfov = 20;
     // sampling
