@@ -138,24 +138,35 @@ class camera {
         }
 
         color ray_color(const ray& r, int depth, const hittable& world) const {
-            // if ray bounces are exceeded, no more light is gathered
-            if (depth <= 0 )
-                return color(0,0,0);
-            
-            hit_record rec;
-            
-            if (world.hit(r, interval(0.001, infinity), rec)){
-                ray scattered;
-                color attenuation;
-                if (rec.mat->scatter(r, rec, attenuation, scattered))
-                    return attenuation * ray_color(scattered, depth-1, world);
-                return color(0,0,0);
-            }
-            
-            vec3 unit_direction = unit_vector(r.direction());
-            auto a = 0.5 * (unit_direction.y() + 1.0);
-            return (1.0 - a) * color(1.0, 1.0, 1.0) + a * color(0.5, 0.7, 1.0);
-        }
+            color current_color(1, 1, 1);
+            ray current_ray = r;    
+
+            // iterate up to maximum allowed depth
+            for (int i = 0; i < depth; ++i) {
+                hit_record rec;
+
+                if (world.hit(current_ray, interval(0.001, infinity), rec)) {
+                    ray scattered;
+                    color attenuation;
+                    if (rec.mat->scatter(current_ray, rec, attenuation, scattered)) {
+                        // Update the cumulative attenuation and continue with the scattered ray.
+                        current_color = current_color * attenuation;
+                        current_ray = scattered;
+                    } else {
+                        // Material did not scatter the ray; return black.
+                        return color(0, 0, 0);
+                    }
+                } else {
+                    // If no hit, compute the background color.
+                    vec3 unit_direction = unit_vector(current_ray.direction());
+                    auto t = 0.5 * (unit_direction.y() + 1.0);
+                    color background = (1.0 - t) * color(1.0, 1.0, 1.0) + t * color(0.5, 0.7, 1.0);
+                    return current_color * background;
+                }
+            }       
+            // If we've exceeded the bounce limit, return black.
+            return color(0, 0, 0);
+        }  
 };
 
 void write_to_ppm(int image_width, int image_height, const std::vector<uint32_t>& buffer, const std::string& filename) {
@@ -177,4 +188,3 @@ void write_to_ppm(int image_width, int image_height, const std::vector<uint32_t>
     }
     out.close();
 }
-
