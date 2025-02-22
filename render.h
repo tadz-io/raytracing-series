@@ -16,6 +16,7 @@ class camera {
         int samples_per_pixel = 1;
         int max_depth = 2;
         double fps = 0;     // render speed in fps
+        bool debug_mode = false;
         
         double vfov = 20;                   // vertical field of view
         point3 lookfrom = point3(1,1,3);    // point camera is looking from
@@ -79,6 +80,12 @@ class camera {
 
         }
 
+        // Wrapper that selects between debug and normal views.
+        color ray_color(const ray& r, int depth, const hittable& world) const {
+            return debug_mode ? ray_color_debug(r, depth, world)
+                              : ray_color_rgb(r, depth, world);
+        }
+
         vec3 sample_square() const {
             // returns a vector in the [-.5,-.5] - [+.5,+.5] unit square
             return vec3(random_double() - 0.5, random_double() - 0.5, 0);
@@ -137,7 +144,7 @@ class camera {
             defocus_disk_v = v * defocus_radius;
         }
 
-        color ray_color(const ray& r, int depth, const hittable& world) const {
+        color ray_color_rgb(const ray& r, int depth, const hittable& world) const {
             color current_color(1, 1, 1);
             ray current_ray = r;    
 
@@ -166,6 +173,31 @@ class camera {
             }       
             // If we've exceeded the bounce limit, return black.
             return color(0, 0, 0);
+        }
+    
+        // Debug view: returns a grayscale color representing the number of hits.
+        color ray_color_debug(const ray& r, int depth, const hittable& world) const {
+            int hit_counter = 0;
+            ray current_ray = r;
+            const int max_hits = 10;  // Maximum hit count for normalization.
+
+            for (int i = 0; i < depth; ++i) {
+                hit_record rec;
+                if (world.hit(current_ray, interval(0.001, infinity), rec)) {
+                    ray scattered;
+                    color attenuation;
+                    if (rec.mat->scatter(current_ray, rec, attenuation, scattered)) {
+                        current_ray = scattered;
+                    } else {
+                        break;
+                    }
+                    ++hit_counter;
+                } else {
+                    break;
+                }
+            }
+            double ratio = static_cast<double>(hit_counter) / max_hits;
+            return color(ratio, ratio, ratio);
         }  
 };
 
