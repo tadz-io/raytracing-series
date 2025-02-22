@@ -113,7 +113,8 @@ class camera {
             image_height = (image_height < 1) ? 1 : image_height;
             
             // calculate scaling factor for rgb values
-            pixel_samples_scale = 1.0 / samples_per_pixel;
+            pixel_samples_scale = debug_mode ? 1.0 / (samples_per_pixel * max_depth)
+                                             : 1.0 / samples_per_pixel;
 
             center = lookfrom;
 
@@ -146,8 +147,7 @@ class camera {
 
         color ray_color_rgb(const ray& r, int depth, const hittable& world) const {
             color current_color(1, 1, 1);
-            ray current_ray = r;    
-
+            ray current_ray = r;
             // iterate up to maximum allowed depth
             for (int i = 0; i < depth; ++i) {
                 hit_record rec;

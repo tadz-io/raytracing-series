@@ -119,6 +119,14 @@ int main(int, char**)
         ImGui::NewFrame();
 
         ImGui::Begin("Settings");
+        // toggle between rgb render and debug mode
+        const char* render_modes[] = { "Normal", "Debug" };
+        static int current_mode = 0;  // 0 for normal, 1 for debug
+        if (ImGui::Combo("Render Mode", &current_mode, render_modes, IM_ARRAYSIZE(render_modes))) {
+            cam.debug_mode = (current_mode == 1);
+            update_render = true;
+        }
+        
         // Input text boxes for camera center coordinates
         if (
             ImGui::InputDouble("x: ", &lookfrom[0]) || 
