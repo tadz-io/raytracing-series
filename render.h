@@ -15,6 +15,7 @@ class camera {
         int image_width;
         int samples_per_pixel = 1;
         int max_depth = 2;
+        double fps = 0;     // render speed in fps
         
         double vfov = 20;                   // vertical field of view
         point3 lookfrom = point3(1,1,3);    // point camera is looking from
@@ -38,17 +39,13 @@ class camera {
         
         void render(const hittable& world, std::vector<u_int32_t>& buffer) {
             initialize();
+
+            // record start time
+            auto start = std::chrono::high_resolution_clock::now();
             
             // render and write to buffer
             for (int j = 0; j < image_height; j++) {
                 for (int i = 0; i < image_width; i++) {
-                    // auto pixel_center = pixel00_loc + (i * pixel_delta_u) + (j * pixel_delta_v);
-                    // auto ray_direction = pixel_center - center;
-                    // ray r(center, ray_direction);
-                    // // color the pixel according to the ray vector
-                    // color pixel_color = ray_color(r, world);
-                    // write_color(buffer, i, j, image_width, pixel_color);
-
                     color pixel_color(0,0,0);
                     for (int sample = 0; sample < samples_per_pixel; sample++) {
                         ray r = get_ray(i, j);
@@ -56,8 +53,15 @@ class camera {
                     }
                     write_color(buffer, i, j, image_width, pixel_samples_scale * pixel_color);
                 }
-            }   
-
+            }
+            
+            // record end time
+            auto end = std::chrono::high_resolution_clock::now();
+            // calculate elapsed time
+            std::chrono::duration<double> elapsed = end - start;
+            double elapsed_seconds = elapsed.count();
+            // calculate in fps
+            fps = 1.0 / elapsed_seconds;
         }
 
         ray get_ray(int i, int j) const {

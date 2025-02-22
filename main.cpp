@@ -24,24 +24,22 @@ int main(int, char**)
     world.add(make_shared<sphere>(point3( 1.0,    0.0, -1.0),   0.5, material_right));
 
     double aspect_ratio {16.0 / 9.0};
-    int image_width {400};
+    int image_width {800};
     
     // setup camera model
     camera cam(aspect_ratio, image_width);
-    cam.defocus_angle = 0.6;
-    cam.focus_dist    = 3.4;
     // get image height
     int image_height {cam.get_image_height()};  
     // create buffer to write rendered image to
     std::vector<uint32_t> buffer(image_width * image_height);
 
     // camera look from position
-    point3 lookfrom = point3(13,2,3);
+    point3 lookfrom = cam.lookfrom;
     // focal length
-    double vfov = 20;
+    double vfov = cam.vfov;
     // sampling
-    int samples_per_pixel = 2;
-    int max_depth = 2;
+    int samples_per_pixel = cam.samples_per_pixel;
+    int max_depth = cam.max_depth;
     // Setup window
     if (!glfwInit())
         return -1;
@@ -78,6 +76,7 @@ int main(int, char**)
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
+    bool update_render = true;
     
     // Main loop
     while (!glfwWindowShouldClose(window))
@@ -111,9 +110,7 @@ int main(int, char**)
         if (updated) {
             cam.lookfrom = lookfrom;
             cam.render(world, buffer);
-            // Update texture with new render
-            glBindTexture(GL_TEXTURE_2D, textureID);
-            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image_width, image_height, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data());
+            update_render = true;
         }
 
         // Start the ImGui frame
@@ -135,26 +132,30 @@ int main(int, char**)
             cam.vfov = vfov;
             cam.samples_per_pixel = samples_per_pixel;
             cam.max_depth = max_depth;
-
-            cam.render(world, buffer);
-            // write_to_ppm(image_width, image_height, buffer, "render.ppm");
-            // Update texture with new render
-            glBindTexture(GL_TEXTURE_2D, textureID);
-            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image_width, image_height, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data());
+            update_render = true;
         }
         ImGui::End();
 
-        
-        ImGui::Begin("Render");
-
-        if (ImGui::Button("Render")) {
+        // render scene when updated
+        if (update_render) {
             cam.render(world, buffer);
-            //write_to_ppm(image_width, image_height, buffer, "render.ppm");
             // Update texture with new render
             glBindTexture(GL_TEXTURE_2D, textureID);
             glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image_width, image_height, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data());
+
+            update_render = false; // Reset the flag
         }
+        
+        ImGui::Begin("Render");
         ImGui::Image((ImTextureID)textureID, ImVec2(image_width, image_height));
+        ImGui::End();
+
+        // Display render time and FPS in a small rectangle box in the top right corner
+        ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - 150, 0), ImGuiCond_Always);
+        ImGui::SetNextWindowSize(ImVec2(150, 50), ImGuiCond_Always);
+        ImGui::Begin("Render Info", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings);
+        ImGui::Text("Render time: %.0f ms", 1000 / cam.fps);
+        ImGui::Text("FPS: %.1f", cam.fps);
         ImGui::End();
 
         // Rendering
