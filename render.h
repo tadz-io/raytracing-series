@@ -177,12 +177,12 @@ class camera {
     
         // Debug view: returns a grayscale color representing the number of hits.
         color ray_color_debug(const ray& r, int depth, const hittable& world) const {
-            int hit_counter = 0;
+            int hit_test = 0;
             ray current_ray = r;
-            const int max_hits = 10;  // Maximum hit count for normalization.
 
             for (int i = 0; i < depth; ++i) {
                 hit_record rec;
+                ++hit_test;
                 if (world.hit(current_ray, interval(0.001, infinity), rec)) {
                     ray scattered;
                     color attenuation;
@@ -191,12 +191,11 @@ class camera {
                     } else {
                         break;
                     }
-                    ++hit_counter;
                 } else {
                     break;
                 }
             }
-            double ratio = static_cast<double>(hit_counter) / max_hits;
+            double ratio = static_cast<double>(hit_test);
             return color(ratio, ratio, ratio);
         }  
 };
