@@ -3,8 +3,10 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #define GL_SILENCE_DEPRECATION // To silence deprecation warnings
+
 #include <GLFW/glfw3.h>
 #include "render.h"
+#include "bvh.h"
 
 int main(int, char**)
 {
@@ -22,6 +24,8 @@ int main(int, char**)
     world.add(make_shared<sphere>(point3(-1.0,    0.0, -1.0),   0.5, material_left));
     world.add(make_shared<sphere>(point3(-1.0,    0.0, -1.0),   0.4, material_bubble));
     world.add(make_shared<sphere>(point3( 1.0,    0.0, -1.0),   0.5, material_right));
+
+    world = hittable_list(make_shared<bvh_node>(world));
 
     double aspect_ratio {16.0 / 9.0};
     int image_width {800};
