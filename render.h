@@ -16,7 +16,7 @@ class camera {
         int samples_per_pixel = 1;
         int max_depth = 2;
         double fps = 0;     // render speed in fps
-        bool debug_mode = false;
+        int view_mode = 0;
         
         double vfov = 20;                   // vertical field of view
         point3 lookfrom = point3(1,1,3);    // point camera is looking from
@@ -82,14 +82,16 @@ class camera {
 
         // Wrapper that selects between debug and normal views.
         color ray_color(const ray& r, int depth, const hittable& world) const {
-            return debug_mode ? ray_color_debug(r, depth, world)
-                              : ray_color_rgb(r, depth, world);
+            return (view_mode == 0) ? ray_color_rgb(r, depth, world) 
+                 : (view_mode == 1) ? ray_color_debug(r, depth, world) 
+                                    : ray_color_bvh(r, depth, world);
+                                    
         }
 
         vec3 sample_square() const {
             // returns a vector in the [-.5,-.5] - [+.5,+.5] unit square
             return vec3(random_double() - 0.5, random_double() - 0.5, 0);
-        }
+        }   
 
         point3 defocus_disk_sample() const {
             // returns a random point in the camera defocus disk
@@ -113,8 +115,8 @@ class camera {
             image_height = (image_height < 1) ? 1 : image_height;
             
             // calculate scaling factor for rgb values
-            pixel_samples_scale = debug_mode ? 1.0 / (samples_per_pixel * max_depth)
-                                             : 1.0 / samples_per_pixel;
+            pixel_samples_scale = (view_mode == 1) ? 1.0 / (samples_per_pixel * max_depth)
+                                                   : 1.0 / samples_per_pixel;
 
             center = lookfrom;
 
@@ -197,7 +199,25 @@ class camera {
             }
             double ratio = static_cast<double>(hit_test);
             return color(ratio, ratio, ratio);
-        }  
+        }
+        
+        color ray_color_bvh(const ray& r, int depth, const hittable& world) const {
+            hit_record rec;
+            
+            if (world.hit(r, interval(0.001, infinity), rec)) {
+                auto nbbox_double = static_cast<double>(rec.nbbox_hit); 
+                if (nbbox_double > 6.0)
+                    std::cout << "nbbox: " << nbbox_double << std::endl;  
+                return (nbbox_double/6) * color(0.92, 0.16, 1);  // Purple for right node
+            } else {
+                return color(1, 1, 0);  // Yellow for hits where left/right isn't set
+            }
+            
+            // Sky color for no hits
+            vec3 unit_direction = unit_vector(r.direction());
+            auto t = 0.5 * (unit_direction.y() + 1.0);
+            return (1.0 - t) * color(1.0, 1.0, 1.0) + t * color(0.5, 0.7, 1.0);
+        }
 };
 
 void write_to_ppm(int image_width, int image_height, const std::vector<uint32_t>& buffer, const std::string& filename) {
