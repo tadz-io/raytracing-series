@@ -13,6 +13,7 @@ class hit_record {
         double t; // parameter `t` of ray at the intersection point
         bool front_face; // is the ray hitting from outside the material
         double normal_angle;
+        int nbbox_hit = 0;
 
         void set_face_normal(const ray& r, const vec3& outward_normal) {
             // set the hit record normal vector

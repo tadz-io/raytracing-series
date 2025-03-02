@@ -12,7 +12,6 @@ int main(int, char**)
 {
     hittable_list world;
 
-
     auto material_ground = make_shared<lambertian>(color(0.8, 0.8, 0.0));
     auto material_center = make_shared<lambertian>(color(0.1, 0.2, 0.5));
     auto material_left   = make_shared<dielectric>(1.50);
@@ -124,10 +123,10 @@ int main(int, char**)
 
         ImGui::Begin("Settings");
         // toggle between rgb render and debug mode
-        const char* render_modes[] = { "Normal", "Debug" };
+        const char* render_modes[] = { "Normal", "Debug", "BVH"};
         static int current_mode = 0;  // 0 for normal, 1 for debug
         if (ImGui::Combo("Render Mode", &current_mode, render_modes, IM_ARRAYSIZE(render_modes))) {
-            cam.debug_mode = (current_mode == 1);
+            cam.view_mode = current_mode;
             update_render = true;
         }
         
