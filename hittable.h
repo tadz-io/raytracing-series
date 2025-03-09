@@ -11,6 +11,8 @@ class hit_record {
         vec3 normal; // normal vector at intersection point
         shared_ptr<material> mat;
         double t; // parameter `t` of ray at the intersection point
+        double u;
+        double v;
         bool front_face; // is the ray hitting from outside the material
         double normal_angle;
         int nbbox_hit = 0;
