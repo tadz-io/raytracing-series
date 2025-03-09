@@ -12,7 +12,7 @@ int main(int, char**)
 {
     hittable_list world;
 
-    auto checker         = make_shared<checker_texture>(.3, color(.0, .0, .0), color(.9, .9, .9));
+    auto checker         = make_shared<checker_texture>(1.0, color(.01, .01, .01), color(.9, .9, .9));
     auto material_ground = make_shared<metal>(checker, 0.0);
     auto material_center = make_shared<lambertian>(color(0.1, 0.2, 0.5));
     auto material_left   = make_shared<dielectric>(1.50);
