@@ -12,12 +12,12 @@ int main(int, char**)
 {
     hittable_list world;
 
-    auto checker         = make_shared<checker_texture>(1, color(.0, .0, .0), color(.9, .9, .9));
-    auto material_ground = make_shared<lambertian>(checker);
+    auto checker         = make_shared<checker_texture>(.3, color(.0, .0, .0), color(.9, .9, .9));
+    auto material_ground = make_shared<metal>(checker, 0.0);
     auto material_center = make_shared<lambertian>(color(0.1, 0.2, 0.5));
     auto material_left   = make_shared<dielectric>(1.50);
     auto material_bubble = make_shared<dielectric>(1.00 / 1.50);
-    auto material_right  = make_shared<metal>(color(0.8, 0.6, 0.2), 1.0);
+    auto material_right  = make_shared<metal>(color(0.8, 0.6, 0.2), 0.0);
     
     world.add(make_shared<sphere>(point3( 0.0, -1000.5, -1.0), 1000.0, material_ground));
     world.add(make_shared<sphere>(point3( 0.0,    0.0, -1.2),   0.5, material_center));
