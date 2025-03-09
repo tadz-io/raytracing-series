@@ -87,3 +87,15 @@ class dielectric : public material {
             return r0 + (1-r0)*std::pow((1 - cosine), 5);
         }
 };
+
+class line_color: public material {
+    public:
+        line_color() {}
+
+        bool scatter(const ray& r, const hit_record& rec, color& attenuation, ray& scattered)
+            const override {
+                attenuation = color(1,0,0);
+                scattered = ray(r.origin(), r.direction());
+                return true;
+            }
+};

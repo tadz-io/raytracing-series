@@ -4,6 +4,7 @@
 #include "hittable.h"
 #include "hittable_list.h"
 #include "sphere.h"
+#include "line.h"
 #include "material.h"
 
 #include <fstream>
@@ -202,21 +203,20 @@ class camera {
         }
         
         color ray_color_bvh(const ray& r, int depth, const hittable& world) const {
+            color current_color(1, 1, 1);
+            ray current_ray = r;
             hit_record rec;
-            
+            // suggestion: iterate through hittable_list(world) and add new line primitives
+            // for every vertex-vertex line of the bvh bounding box. Then render
             if (world.hit(r, interval(0.001, infinity), rec)) {
-                auto nbbox_double = static_cast<double>(rec.nbbox_hit); 
-                if (nbbox_double > 6.0)
-                    std::cout << "nbbox: " << nbbox_double << std::endl;  
-                return (nbbox_double/6) * color(0.92, 0.16, 1);  // Purple for right node
+                // implement bvh edge render
             } else {
-                return color(1, 1, 0);  // Yellow for hits where left/right isn't set
-            }
-            
-            // Sky color for no hits
-            vec3 unit_direction = unit_vector(r.direction());
-            auto t = 0.5 * (unit_direction.y() + 1.0);
-            return (1.0 - t) * color(1.0, 1.0, 1.0) + t * color(0.5, 0.7, 1.0);
+                // If no hit, compute the background color.
+                vec3 unit_direction = unit_vector(current_ray.direction());
+                auto t = 0.5 * (unit_direction.y() + 1.0);
+                color background = (1.0 - t) * color(1.0, 1.0, 1.0) + t * color(0.5, 0.7, 1.0);
+                return current_color * background;
+            }           
         }
 };
 

@@ -43,7 +43,7 @@ class bvh_node : public hittable {
             if (!bbox.hit(r, ray_t))
                 return false;
             
-            // to visualize boundinx boxes
+            // to visualize bounding boxes
             rec.nbbox_hit++;
 
             bool hit_left = left->hit(r, ray_t, rec);
