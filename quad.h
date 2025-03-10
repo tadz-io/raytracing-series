@@ -62,7 +62,7 @@ class quad: public hittable {
             return true;
         }
 
-    private:
+    protected:
         point3 Q;
         vec3 u, v;
         vec3 w;
@@ -78,13 +78,35 @@ class triangle: public quad {
     public:
         triangle(const point3& Q, const vec3& u, const vec3& v, shared_ptr<material> mat)
             : quad(Q, u, v, mat) {}
+      
+        bool is_interior(double alpha, double beta, hit_record& rec) const override {
+                if (!((alpha > 0) && (beta > 0) && (alpha + beta < 1)))
+                    return false;
+                
+                rec.u = alpha;
+                rec.v = beta;
+                return true;    
+            }
+};
+
+class disk: public quad {
+    public:
+        disk(const point3& Q, const vec3& u, const  vec3& v, shared_ptr<material> mat)
+            : quad(Q, u, v, mat), r(v) {}
+
+        virtual void set_bounding_box() override {
+            bbox = aabb(Q-u-v, Q+u+v);
+        }
 
        bool is_interior(double alpha, double beta, hit_record& rec) const override {
-            if (!((alpha > 0) && (beta > 0) && (alpha + beta < 1)))
+            if ((alpha*alpha + beta*beta) > 1)
                 return false;
             
             rec.u = alpha;
             rec.v = beta;
             return true;    
         }
-};
+
+    private:
+        vec3 r;
+};    

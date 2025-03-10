@@ -25,7 +25,7 @@ int main(int, char**)
     world.add(make_shared<sphere>(point3(-1.0,    0.0, -1.0),   0.5, material_left));
     world.add(make_shared<sphere>(point3(-1.0,    0.0, -1.0),   0.4, material_bubble));
     world.add(make_shared<sphere>(point3( 1.0,    0.0, -1.0),   0.5, material_right));
-    world.add(make_shared<triangle>  (point3( 1.5,    0.0,  1.0), vec3(1.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0), material_center));
+    world.add(make_shared<disk>  (point3( 1.5,    0.0,  1.0), vec3(1.0, 1.0, 0.0), vec3(1.0, 0.0, 0.0), material_center));
 
     world = hittable_list(make_shared<bvh_node>(world));
 
