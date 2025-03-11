@@ -15,6 +15,7 @@ class camera {
         int image_width;
         int samples_per_pixel = 1;
         int max_depth = 2;
+        color background = color(0,0,0);
         double fps = 0;     // render speed in fps
         int view_mode = 0;
         
@@ -148,33 +149,34 @@ class camera {
         }
 
         color ray_color_rgb(const ray& r, int depth, const hittable& world) const {
-            color current_color(1, 1, 1);
+            color accumulated_color(0, 0, 0);
+            color current_attenuation(1, 1, 1);
             ray current_ray = r;
-            // iterate up to maximum allowed depth
-            for (int i = 0; i < depth; ++i) {
+        
+            // Iterate up to the maximum bounce depth.
+            for (int i = 0; i < depth; i++) {
                 hit_record rec;
-
-                if (world.hit(current_ray, interval(0.001, infinity), rec)) {
-                    ray scattered;
-                    color attenuation;
-                    if (rec.mat->scatter(current_ray, rec, attenuation, scattered)) {
-                        // Update the cumulative attenuation and continue with the scattered ray.
-                        current_color = current_color * attenuation;
-                        current_ray = scattered;
-                    } else {
-                        // Material did not scatter the ray; return black.
-                        return color(0, 0, 0);
-                    }
-                } else {
-                    // If no hit, compute the background color.
-                    vec3 unit_direction = unit_vector(current_ray.direction());
-                    auto t = 0.5 * (unit_direction.y() + 1.0);
-                    color background = (1.0 - t) * color(1.0, 1.0, 1.0) + t * color(0.5, 0.7, 1.0);
-                    return current_color * background;
+                // If no hit, add background color modulated by the current attenuation.
+                if (!world.hit(current_ray, interval(0.001, infinity), rec)) {
+                    accumulated_color += current_attenuation * background;
+                    break;
                 }
-            }       
-            // If we've exceeded the bounce limit, return black.
-            return color(0, 0, 0);
+        
+                // Add emission from the hit point.
+                accumulated_color += current_attenuation * rec.mat->emitted(rec.u, rec.v, rec.p);
+        
+                ray scattered;
+                color scatter_attenuation;
+                // If the material does not scatter, we end the loop.
+                if (!rec.mat->scatter(current_ray, rec, scatter_attenuation, scattered)) {
+                    break;
+                }
+        
+                // Update the attenuation and continue with the scattered ray.
+                current_attenuation *= scatter_attenuation;
+                current_ray = scattered;
+            }
+            return accumulated_color;
         }
     
         // Debug view: returns a grayscale color representing the number of hits.

@@ -13,8 +13,11 @@ int main(int, char**)
 {
     hittable_list world;
 
+    auto difflight = make_shared<diffuse_light>(color(4.0,4.0,4.0));
+    world.add(make_shared<quad>(point3(0,1,-1), vec3(5,0,0), vec3(0,0,5), difflight));
+
     auto checker         = make_shared<checker_texture>(1.0, color(.01, .01, .01), color(.9, .9, .9));
-    auto material_ground = make_shared<metal>(checker, 0.0);
+    auto material_ground = make_shared<lambertian>(checker);
     auto material_center = make_shared<lambertian>(color(0.1, 0.2, 0.5));
     auto material_left   = make_shared<dielectric>(1.50);
     auto material_bubble = make_shared<dielectric>(1.00 / 1.50);
@@ -25,7 +28,7 @@ int main(int, char**)
     world.add(make_shared<sphere>(point3(-1.0,    0.0, -1.0),   0.5, material_left));
     world.add(make_shared<sphere>(point3(-1.0,    0.0, -1.0),   0.4, material_bubble));
     world.add(make_shared<sphere>(point3( 1.0,    0.0, -1.0),   0.5, material_right));
-    world.add(make_shared<disk>  (point3( 1.5,    0.0,  1.0), vec3(1.0, 1.0, 0.0), vec3(1.0, 0.0, 0.0), material_center));
+    world.add(make_shared<disk>  (point3( 1.5,    0.0,  1.0), vec3(1.0, 1.0, 0.0), vec3(1.0, 0.0, 0.0), difflight));
 
     world = hittable_list(make_shared<bvh_node>(world));
 
