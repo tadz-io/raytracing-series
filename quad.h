@@ -95,6 +95,7 @@ class disk: public quad {
             : quad(Q, u, v, mat), r(v) {}
 
         virtual void set_bounding_box() override {
+            // bounding box seems to be incorrect for disk
             bbox = aabb(Q-u-v, Q+u+v);
         }
 
@@ -102,8 +103,8 @@ class disk: public quad {
             if ((alpha*alpha + beta*beta) > 1)
                 return false;
             
-            rec.u = alpha;
-            rec.v = beta;
+            rec.u = alpha/2+0.5;
+            rec.v = beta/2+0.5;
             return true;    
         }
 
