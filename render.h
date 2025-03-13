@@ -204,6 +204,10 @@ class camera {
         }
         
         color ray_color_bvh(const ray& r, int depth, const hittable& world) const {
+            // to do:
+            // if hit scatter object -> return color depending on angle relative to normal
+            // if hit emissive object -> return color emissive object
+            
             hit_record rec;
             
             if (world.hit(r, interval(0.001, infinity), rec)) {
