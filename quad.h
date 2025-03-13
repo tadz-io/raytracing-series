@@ -91,23 +91,28 @@ class triangle: public quad {
 
 class disk: public quad {
     public:
-        disk(const point3& Q, const vec3& u, const  vec3& v, shared_ptr<material> mat)
-            : quad(Q, u, v, mat), r(v) {}
-
+        disk(const point3& Q, const vec3& u, const vec3& v, shared_ptr<material> mat)
+            : quad(Q, u, v, mat) 
+            {
+                set_bounding_box();
+            }
+        
         virtual void set_bounding_box() override {
-            // bounding box seems to be incorrect for disk
-            bbox = aabb(Q-u-v, Q+u+v);
+            auto bbox_diagonal1 = aabb(Q-u-v, Q + u + v);
+            auto bbox_diagonal2 = aabb(Q-u+v, Q + u - v);
+            bbox = aabb(bbox_diagonal1, bbox_diagonal2);
         }
 
-       bool is_interior(double alpha, double beta, hit_record& rec) const override {
-            if ((alpha*alpha + beta*beta) > 1)
-                return false;
+        bool is_interior(double alpha, double beta, hit_record& rec) const override {
             
-            rec.u = alpha/2+0.5;
-            rec.v = beta/2+0.5;
+            if ((alpha*alpha + beta*beta) > 1.0)
+                return false;
+            // not sure if the uv coordinates are correct
+            rec.u = alpha;
+            rec.v = beta;
             return true;    
         }
 
     private:
-        vec3 r;
-};    
+        double radius;
+};
