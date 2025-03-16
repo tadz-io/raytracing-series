@@ -40,8 +40,16 @@ class line: public hittable {
 
             // t = (oaxb ⋅ (dxb)) / |dxb|^2
             auto t = dot(cross(oa, b), -dist) / (dist.length_squared());
+            // s = (oaxd ⋅ (dxb)) / |dxb|^2
+            auto s = dot(cross(oa, r.direction()), -dist) / (dist.length_squared());
 
-            if (distance < tickness) {
+            if (s < 0.0 || s > 1.0)
+                return false;
+
+            if (!ray_t.contains(t))
+                return false;
+
+            if (std::fabs(distance) < tickness) {
                 rec.t = t;
                 rec.p = r.at(rec.t);
                 rec.normal = dist_unit;
