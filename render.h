@@ -217,7 +217,23 @@ class camera {
             // to do:
             // if hit scatter object -> return color depending on angle relative to normal
             // if hit emissive object -> return color emissive object
-            return RayTraceResult();
+            ray current_ray = r;
+            double min_depth = infinity;
+            hit_record rec;
+
+            if (!world.hit(r, interval(0.001, infinity), rec))
+                return RayTraceResult();
+            
+            min_depth = rec.t;
+
+            double near_plane = 0.1;
+            double far_plane =  20.0;
+            double normalized_depth = (min_depth - near_plane) / (far_plane - near_plane);
+            
+            normalized_depth = interval(0.0, 1.0).clamp(normalized_depth);
+            color depth_color = color(normalized_depth, normalized_depth, normalized_depth);
+
+            return RayTraceResult(depth_color, min_depth);
         }
 };
 
