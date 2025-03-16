@@ -8,6 +8,14 @@
 
 #include <fstream>
 
+struct RayTraceResult {
+    color pixel_color;
+    double depth;
+
+    RayTraceResult(const color& c, double d) : pixel_color(c), depth(d) {}
+    RayTraceResult() : pixel_color(0,0,0), depth(infinity) {}
+};
+
 class camera {
     public:
         // public camera parameters
