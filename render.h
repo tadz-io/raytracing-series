@@ -50,6 +50,9 @@ class camera {
         void render(const hittable& world, std::vector<u_int32_t>& buffer) {
             initialize();
 
+            // create buffer for depth map
+            std::vector<double> depth_buffer(image_width * image_height, infinity);
+
             // record start time
             auto start = std::chrono::high_resolution_clock::now();
             
@@ -57,14 +60,25 @@ class camera {
             for (int j = 0; j < image_height; j++) {
                 for (int i = 0; i < image_width; i++) {
                     color pixel_color(0,0,0);
+                    double min_depth = infinity;
+
                     for (int sample = 0; sample < samples_per_pixel; sample++) {
                         ray r = get_ray(i, j);
-                        pixel_color += ray_color(r, max_depth, world).pixel_color;
+                        RayTraceResult result = ray_color(r, max_depth, world);
+                        pixel_color += result.pixel_color;
+                        min_depth = std::min(min_depth, result.depth);
                     }
+                    
                     write_color(buffer, i, j, image_width, pixel_samples_scale * pixel_color);
+                    depth_buffer[j * image_width + i] = min_depth;
                 }
             }
-            
+
+            std::vector<aabb> bboxes;
+            world.gather_internal_nodes(bboxes);
+
+            std::cout << "bbox vector size: " << bboxes.size() << std::endl;
+
             // record end time
             auto end = std::chrono::high_resolution_clock::now();
             // calculate elapsed time

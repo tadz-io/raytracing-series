@@ -36,7 +36,15 @@ class hittable_list : public hittable {
         }
 
         aabb bounding_box() const override { return bbox; }
-    
+
+        void gather_internal_nodes(std::vector<aabb>& boxes) const override {
+            std::cout << "called from hittable_list" << std::endl;
+            std::cout << "size of objects: " << objects.size() << std::endl;
+            for (const auto& object: objects) {
+                object->gather_internal_nodes(boxes);
+            }
+        }
+
     private:
         aabb bbox;
 };
