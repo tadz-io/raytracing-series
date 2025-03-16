@@ -59,7 +59,7 @@ class camera {
                     color pixel_color(0,0,0);
                     for (int sample = 0; sample < samples_per_pixel; sample++) {
                         ray r = get_ray(i, j);
-                        pixel_color += ray_color(r, max_depth, world);
+                        pixel_color += ray_color(r, max_depth, world).pixel_color;
                     }
                     write_color(buffer, i, j, image_width, pixel_samples_scale * pixel_color);
                 }
@@ -90,7 +90,7 @@ class camera {
         }
 
         // Wrapper that selects between debug and normal views.
-        color ray_color(const ray& r, int depth, const hittable& world) const {
+        RayTraceResult ray_color(const ray& r, int depth, const hittable& world) const {
             return (view_mode == 0) ? ray_color_rgb(r, depth, world) 
                  : (view_mode == 1) ? ray_color_debug(r, depth, world) 
                                     : ray_color_bvh(r, depth, world);
@@ -156,10 +156,11 @@ class camera {
             defocus_disk_v = v * defocus_radius;
         }
 
-        color ray_color_rgb(const ray& r, int depth, const hittable& world) const {
+        RayTraceResult ray_color_rgb(const ray& r, int depth, const hittable& world) const {
             color accumulated_color(0, 0, 0);
             color current_attenuation(1, 1, 1);
             ray current_ray = r;
+            double min_depth = infinity;
         
             // Iterate up to the maximum bounce depth.
             for (int i = 0; i < depth; i++) {
@@ -184,13 +185,14 @@ class camera {
                 current_attenuation *= scatter_attenuation;
                 current_ray = scattered;
             }
-            return accumulated_color;
+            return RayTraceResult(accumulated_color, min_depth);
         }
     
         // Debug view: returns a grayscale color representing the number of hits.
-        color ray_color_debug(const ray& r, int depth, const hittable& world) const {
+        RayTraceResult ray_color_debug(const ray& r, int depth, const hittable& world) const {
             int hit_test = 0;
             ray current_ray = r;
+            double min_depth = infinity;
 
             for (int i = 0; i < depth; ++i) {
                 hit_record rec;
@@ -208,29 +210,14 @@ class camera {
                 }
             }
             double ratio = static_cast<double>(hit_test);
-            return color(ratio, ratio, ratio);
+            return RayTraceResult(color(ratio, ratio, ratio), min_depth);
         }
         
-        color ray_color_bvh(const ray& r, int depth, const hittable& world) const {
+        RayTraceResult ray_color_bvh(const ray& r, int depth, const hittable& world) const {
             // to do:
             // if hit scatter object -> return color depending on angle relative to normal
             // if hit emissive object -> return color emissive object
-            
-            hit_record rec;
-            
-            if (world.hit(r, interval(0.001, infinity), rec)) {
-                auto nbbox_double = static_cast<double>(rec.nbbox_hit); 
-                if (nbbox_double > 6.0)
-                    std::cout << "nbbox: " << nbbox_double << std::endl;  
-                return (nbbox_double/6) * color(0.92, 0.16, 1);  // Purple for right node
-            } else {
-                return color(1, 1, 0);  // Yellow for hits where left/right isn't set
-            }
-            
-            // Sky color for no hits
-            vec3 unit_direction = unit_vector(r.direction());
-            auto t = 0.5 * (unit_direction.y() + 1.0);
-            return (1.0 - t) * color(1.0, 1.0, 1.0) + t * color(0.5, 0.7, 1.0);
+            return RayTraceResult();
         }
 };
 
