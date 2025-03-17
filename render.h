@@ -27,10 +27,13 @@ class camera {
         double fps = 0;     // render speed in fps
         int view_mode = 0;
         
+        vec3 u, v, w;                       // camera frame basis vectors
         double vfov = 20;                   // vertical field of view
         point3 lookfrom = point3(1,1,3);    // point camera is looking from
         point3 lookat = point3(0,0,-1);     // point camera is looking at
         vec3 vup = vec3(0,1,0);             // camera-relative up direction
+        double viewport_width;
+        double viewport_height;
 
         double defocus_angle = 0;
         double focus_dist = 1;
@@ -129,7 +132,6 @@ class camera {
         point3 pixel00_loc;         // location of pixel (0, 0) 
         vec3 pixel_delta_u;         // pixel spacing in horizontal
         vec3 pixel_delta_v;         // pixel spacing in vertical direction
-        vec3 u, v, w;               // camera frame basis vectors
         vec3 defocus_disk_u;        // defocus disk horizontal radius
         vec3 defocus_disk_v;        // defocus deisk vertical radius
 
@@ -145,9 +147,11 @@ class camera {
 
             // viewport parameters
             auto theta = degrees_to_radians(vfov);
-            auto viewport_height = 2 * std::tan(theta/2) * focus_dist;
-            auto viewport_width = viewport_height * (double(image_width)/image_height);
+            viewport_height = 2 * std::tan(theta/2) * focus_dist;
+            viewport_width = viewport_height * (double(image_width)/image_height);
             
+            std::cout << "viewport width: " << viewport_width << std::endl;
+            std::cout << "viewport height: " << viewport_height << std::endl;
             // calculate u, v, w basis vectors
             w = unit_vector(lookfrom - lookat);
             u = unit_vector(cross(vup, w));
