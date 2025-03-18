@@ -41,7 +41,6 @@ class hittable {
         virtual aabb bounding_box() const = 0;
 
         virtual void gather_internal_nodes(std::vector<aabb>& boxes) const {
-            std::cout << "called from hittable" << std::endl;
             boxes.push_back(this->bounding_box());
         };
 };

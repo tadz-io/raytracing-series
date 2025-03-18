@@ -42,13 +42,4 @@ void write_color(std::vector<uint32_t>& buffer, size_t index, const color& pixel
 void write_color(std::vector<uint32_t>& buffer, int x, int y, int width, const color& pixel_color) {
     size_t index = y * width + x;
     write_color(buffer, index, pixel_color);
-    if (x == 126 && y == 126) {
-        // Print packed value
-        // Extract from ABGR
-        int b = (buffer[index] >> 16) & 0xFF;
-        int g = (buffer[index] >> 8)  & 0xFF;
-        int r =  buffer[index]        & 0xFF;
-        // std::cout << "buffer write: R=" << r << " G=" << g << " B=" << b << std::endl;
-        // std::cout << "Packed value: 0x" << std::hex << buffer[index] << std::dec << std::endl;
-    }
 }
