@@ -5,6 +5,7 @@
 #include "hittable_list.h"
 #include "sphere.h"
 #include "material.h"
+#include "draw.h"
 
 #include <fstream>
 
@@ -27,35 +28,35 @@ class camera {
         double fps = 0;     // render speed in fps
         int view_mode = 0;
         
-        vec3 u, v, w;                       // camera frame basis vectors
         double vfov = 20;                   // vertical field of view
         point3 lookfrom = point3(1,1,3);    // point camera is looking from
         point3 lookat = point3(0,0,-1);     // point camera is looking at
         vec3 vup = vec3(0,1,0);             // camera-relative up direction
+        // viewport dimensions
         double viewport_width;
         double viewport_height;
-
+        
         double defocus_angle = 0;
         double focus_dist = 1;
-
+        
         camera(): aspect_ratio(1.0), image_width(100) {
             initialize();
         }
-
+        
         camera(double aspect_ratio, int image_width): aspect_ratio(aspect_ratio), image_width(image_width) {
             initialize();
         }
-
+        
         int get_image_height() const {
             return image_height;
         }
         
         void render(const hittable& world, std::vector<u_int32_t>& buffer) {
             initialize();
-
+            
             // create buffer for depth map
             std::vector<double> depth_buffer(image_width * image_height, infinity);
-
+            
             // record start time
             auto start = std::chrono::high_resolution_clock::now();
             
@@ -64,7 +65,7 @@ class camera {
                 for (int i = 0; i < image_width; i++) {
                     color pixel_color(0,0,0);
                     double min_depth = infinity;
-
+                    
                     for (int sample = 0; sample < samples_per_pixel; sample++) {
                         ray r = get_ray(i, j);
                         RayTraceResult result = ray_color(r, max_depth, world);
@@ -76,12 +77,14 @@ class camera {
                     depth_buffer[j * image_width + i] = min_depth;
                 }
             }
-
+            
             std::vector<aabb> bboxes;
             world.gather_internal_nodes(bboxes);
-
-            std::cout << "bbox vector size: " << bboxes.size() << std::endl;
-
+            
+            for (const auto& box: bboxes) {
+                draw_box_edges(box, buffer, depth_buffer);
+            }
+            
             // record end time
             auto end = std::chrono::high_resolution_clock::now();
             // calculate elapsed time
@@ -90,51 +93,123 @@ class camera {
             // calculate in fps
             fps = 1.0 / elapsed_seconds;
         }
-
+        
         ray get_ray(int i, int j) const {
             // construct a camera ray originating from the origin and directed at a randomely
             // sampled point around the pixel at location (i, j)
             auto offset = sample_square();
             auto pixel_sample = pixel00_loc
-                                + ((i + offset.x()) * pixel_delta_u)
-                                + ((j + offset.y()) * pixel_delta_v);
+            + ((i + offset.x()) * pixel_delta_u)
+            + ((j + offset.y()) * pixel_delta_v);
             
             auto ray_origin = (defocus_angle <= 0) ? center : defocus_disk_sample();
             auto ray_direction = pixel_sample - ray_origin;
-
+            
             return ray(ray_origin, ray_direction);
-
+            
         }
-
+        
         // Wrapper that selects between debug and normal views.
         RayTraceResult ray_color(const ray& r, int depth, const hittable& world) const {
             return (view_mode == 0) ? ray_color_rgb(r, depth, world) 
-                 : (view_mode == 1) ? ray_color_debug(r, depth, world) 
-                                    : ray_color_bvh(r, depth, world);
-                                    
+            : (view_mode == 1) ? ray_color_debug(r, depth, world) 
+            : ray_color_bvh(r, depth, world);
+            
+        }
+        
+        void project_to_viewport(const point3& p, point3& screen_coords) {
+            // vector pointing from camera origin to point p
+            vec3 OP = p - lookfrom;
+            // project OP onto viewport basis vectors u, v and w
+            auto viewport_x = dot(OP, u);
+            auto viewport_y = dot(OP, v);
+            auto viewport_z = dot(OP, -w);
+
+            // // Perspective projection
+            // if (viewport_z <= 0) {
+            //     // Point is behind camera
+            // screen_coords = vec3(-1, -1, infinity);
+            // return;
+            // }
+            
+            // map to normalized device coordinates
+            auto scale_factor = 1 / viewport_z;
+            double ndc_x = viewport_x * scale_factor / (viewport_width / 2); 
+            double ndc_y = viewport_y * scale_factor / (viewport_height / 2);
+            
+            // Convert to screen coordinates
+            int screen_x = (ndc_x + 1) * 0.5 * image_width;
+            int screen_y = (1 - ndc_y) * 0.5 * image_height;
+            
+            screen_coords = vec3(screen_x, screen_y, viewport_z);
+            
         }
 
+        void draw_box_edges(
+            const aabb& box, 
+            std::vector<uint32_t>& color_buffer,
+            std::vector<double>& depth_buffer) {
+                
+            // The 8 corners of the box
+            point3 corners[8] = {
+                point3(box.x.min, box.y.min, box.z.max),
+                point3(box.x.max, box.y.min, box.z.max),
+                point3(box.x.min, box.y.min, box.z.min),
+                point3(box.x.max, box.y.min, box.z.min),
+                point3(box.x.min, box.y.max, box.z.max),
+                point3(box.x.max, box.y.max, box.z.max),
+                point3(box.x.min, box.y.max, box.z.min),
+                point3(box.x.max, box.y.max, box.z.min)
+            };
+            
+            // The 12 edges defined by pairs of corner indices
+            int edges[12][2] = {
+                {0, 1}, {0, 2}, {1, 3}, {2, 3}, // Bottom face
+                {4, 5}, {4, 6}, {5, 7}, {6, 7}, // Top face
+                {0, 4}, {1, 5}, {2, 6}, {3, 7}  // Connecting edges
+            };
+        
+            point3 screen_corners[8];
+            for (int i = 0; i < 8; ++i) {
+                project_to_viewport(corners[i], screen_corners[i]);
+            }
+
+            // draw edges
+            for (int i = 0; i < 12; ++i) {
+                point3& p0 = screen_corners[edges[i][0]];
+                point3& p1 = screen_corners[edges[i][1]];
+
+                // Skip lines if either point is behind the camera
+                if (p0.z() <= 0 || p1.z() <= 0) {
+                    continue;
+                }
+
+                bresenham(p0, p1, color_buffer, depth_buffer, image_width, image_height);
+            }
+        }
+        
         vec3 sample_square() const {
             // returns a vector in the [-.5,-.5] - [+.5,+.5] unit square
             return vec3(random_double() - 0.5, random_double() - 0.5, 0);
         }   
-
+        
         point3 defocus_disk_sample() const {
             // returns a random point in the camera defocus disk
             auto p = random_in_unit_disk();
             return center + (p[0] * defocus_disk_u) + (p[1] * defocus_disk_v);
         }
-
-    private:
+        
+        private:
         int image_height;           // rendered image height
         double pixel_samples_scale; // scaling factor for rgb values
         point3 center;              // camera center
         point3 pixel00_loc;         // location of pixel (0, 0) 
+        vec3 u, v, w;               // camera frame basis vectors
         vec3 pixel_delta_u;         // pixel spacing in horizontal
         vec3 pixel_delta_v;         // pixel spacing in vertical direction
         vec3 defocus_disk_u;        // defocus disk horizontal radius
         vec3 defocus_disk_v;        // defocus deisk vertical radius
-
+        
         void initialize() {
             image_height = int(image_width / aspect_ratio);
             image_height = (image_height < 1) ? 1 : image_height;
@@ -150,8 +225,6 @@ class camera {
             viewport_height = 2 * std::tan(theta/2) * focus_dist;
             viewport_width = viewport_height * (double(image_width)/image_height);
             
-            std::cout << "viewport width: " << viewport_width << std::endl;
-            std::cout << "viewport height: " << viewport_height << std::endl;
             // calculate u, v, w basis vectors
             w = unit_vector(lookfrom - lookat);
             u = unit_vector(cross(vup, w));
@@ -241,7 +314,7 @@ class camera {
 
             if (!world.hit(r, interval(0.001, infinity), rec))
                 return RayTraceResult();
-            
+            // get intersection point and calculate OP. then dot with -w and compare against depth map
             min_depth = rec.t;
 
             double near_plane = 0.1;
