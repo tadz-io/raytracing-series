@@ -55,7 +55,6 @@ class bvh_node : public hittable {
         aabb bounding_box() const override { return bbox; }
         
         void gather_internal_nodes(std::vector<aabb>& boxes) const override {
-            std::cout << "called from bvh_node" << std::endl;
             if (left != right) {
                 boxes.push_back(bbox);
                 left->gather_internal_nodes(boxes);
