@@ -42,9 +42,6 @@ int main(int, char**)
     int image_height {cam.get_image_height()};  
     int image_width {cam.image_width};
 
-    std::cout << "image height: " << image_height << std::endl;
-    std::cout << "image width: " << image_width << std::endl;
-    
     // create buffer to write rendered image to
     std::vector<uint32_t> buffer(image_width * image_height);
 
