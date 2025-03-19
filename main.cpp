@@ -8,35 +8,43 @@
 #include "render.h"
 #include "bvh.h"
 #include "quad.h"
+#include "scenes.h"
 
 int main(int, char**)
 {
     hittable_list world;
 
-    auto difflight = make_shared<diffuse_light>(color(4.0,4.0,4.0));
-    auto checker         = make_shared<checker_texture>(1.0, color(.01, .01, .01), color(.9, .9, .9));
-    auto material_ground = make_shared<lambertian>(checker);
-    auto material_center = make_shared<lambertian>(color(0.1, 0.2, 0.5));
-    auto material_left   = make_shared<dielectric>(1.50);
-    auto material_bubble = make_shared<dielectric>(1.00 / 1.50);
-    auto material_right  = make_shared<metal>(color(0.8, 0.8, 0.8), 0.0);
+    // auto difflight = make_shared<diffuse_light>(color(4.0,4.0,4.0));
+    // auto checker         = make_shared<checker_texture>(1.0, color(.01, .01, .01), color(.9, .9, .9));
+    // auto material_ground = make_shared<lambertian>(checker);
+    // auto material_center = make_shared<lambertian>(color(0.1, 0.2, 0.5));
+    // auto material_left   = make_shared<dielectric>(1.50);
+    // auto material_bubble = make_shared<dielectric>(1.00 / 1.50);
+    // auto material_right  = make_shared<metal>(color(0.8, 0.8, 0.8), 0.0);
     
-    world.add(make_shared<sphere>(point3( 0.0, -1000.5, -1.0), 1000.0, material_ground));
-    world.add(make_shared<sphere>(point3(-1.0,    0.0, -8.0),   0.5, material_left));
-    world.add(make_shared<sphere>(point3( 0.0,    0.0, -2.0),   0.5, material_center));
-    // world.add(make_shared<sphere>(point3( 1.0,    0.0, -1.0),   0.4, material_bubble));
-    world.add(make_shared<sphere>(point3( 1.0,    0.0, -1.0),   0.5, material_right));
-    world.add(make_shared<disk>  (point3( 0.0,    2.0,  -1.0), vec3(1.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0), difflight));
+    // world.add(make_shared<sphere>(point3( 0.0, -1000.5, -1.0), 1000.0, material_ground));
+    // world.add(make_shared<sphere>(point3(-1.0,    0.0, -8.0),   0.5, material_left));
+    // world.add(make_shared<sphere>(point3( 0.0,    0.0, -2.0),   0.5, material_center));
+    // // world.add(make_shared<sphere>(point3( 1.0,    0.0, -1.0),   0.4, material_bubble));
+    // world.add(make_shared<sphere>(point3( 1.0,    0.0, -1.0),   0.5, material_right));
+    // world.add(make_shared<disk>  (point3( 0.0,    2.0,  -1.0), vec3(1.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0), difflight));
 
-    world = hittable_list(make_shared<bvh_node>(world));
+    // world = hittable_list(make_shared<bvh_node>(world));
 
-    double aspect_ratio {16.0 / 9.0};
-    int image_width {800};
+    // double aspect_ratio {16.0 / 9.0};
+    // int image_width {800};
     
+    camera cam;
+    cornell_box(cam, world);
     // setup camera model
-    camera cam(aspect_ratio, image_width);
+    // camera cam(aspect_ratio, image_width);
     // get image height
     int image_height {cam.get_image_height()};  
+    int image_width {cam.image_width};
+
+    std::cout << "image height: " << image_height << std::endl;
+    std::cout << "image width: " << image_width << std::endl;
+    
     // create buffer to write rendered image to
     std::vector<uint32_t> buffer(image_width * image_height);
 

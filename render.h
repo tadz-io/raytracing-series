@@ -111,6 +111,43 @@ class camera {
             return ray(ray_origin, ray_direction);
             
         }
+
+        void initialize() {
+            image_height = int(image_width / aspect_ratio);
+            image_height = (image_height < 1) ? 1 : image_height;
+            
+            // calculate scaling factor for rgb values
+            pixel_samples_scale = (view_mode == 1) ? 1.0 / (samples_per_pixel * max_depth)
+                                                   : 1.0 / samples_per_pixel;
+
+            center = lookfrom;
+
+            // viewport parameters
+            auto theta = degrees_to_radians(vfov);
+            viewport_height = 2 * std::tan(theta/2) * focus_dist;
+            viewport_width = viewport_height * (double(image_width)/image_height);
+            
+            // calculate u, v, w basis vectors
+            w = unit_vector(lookfrom - lookat);
+            u = unit_vector(cross(vup, w));
+            v = cross(w, u);
+
+            // calculate vectros across horizontal and down vertical viewport edges
+            auto viewport_u = viewport_width * u;       // across horizontal viewport edge
+            auto viewport_v = viewport_height * -v;     // down view vertical edge
+            pixel_delta_u = viewport_u / image_width;
+            pixel_delta_v = viewport_v / image_height;
+            auto viewport_upper_left = center 
+                                        - (focus_dist * w)
+                                        - viewport_u / 2
+                                        - viewport_v / 2;
+            pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
+
+            // Calculate the camera defocus disk basis vectors.
+            auto defocus_radius = focus_dist * std::tan(degrees_to_radians(defocus_angle / 2));
+            defocus_disk_u = u * defocus_radius;
+            defocus_disk_v = v * defocus_radius;
+        }
         
         // Wrapper that selects between debug and normal views.
         RayTraceResult ray_color(const ray& r, int depth, const hittable& world) const {
@@ -213,43 +250,6 @@ class camera {
         vec3 defocus_disk_u;        // defocus disk horizontal radius
         vec3 defocus_disk_v;        // defocus deisk vertical radius
         
-        void initialize() {
-            image_height = int(image_width / aspect_ratio);
-            image_height = (image_height < 1) ? 1 : image_height;
-            
-            // calculate scaling factor for rgb values
-            pixel_samples_scale = (view_mode == 1) ? 1.0 / (samples_per_pixel * max_depth)
-                                                   : 1.0 / samples_per_pixel;
-
-            center = lookfrom;
-
-            // viewport parameters
-            auto theta = degrees_to_radians(vfov);
-            viewport_height = 2 * std::tan(theta/2) * focus_dist;
-            viewport_width = viewport_height * (double(image_width)/image_height);
-            
-            // calculate u, v, w basis vectors
-            w = unit_vector(lookfrom - lookat);
-            u = unit_vector(cross(vup, w));
-            v = cross(w, u);
-
-            // calculate vectros across horizontal and down vertical viewport edges
-            auto viewport_u = viewport_width * u;       // across horizontal viewport edge
-            auto viewport_v = viewport_height * -v;     // down view vertical edge
-            pixel_delta_u = viewport_u / image_width;
-            pixel_delta_v = viewport_v / image_height;
-            auto viewport_upper_left = center 
-                                        - (focus_dist * w)
-                                        - viewport_u / 2
-                                        - viewport_v / 2;
-            pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
-
-            // Calculate the camera defocus disk basis vectors.
-            auto defocus_radius = focus_dist * std::tan(degrees_to_radians(defocus_angle / 2));
-            defocus_disk_u = u * defocus_radius;
-            defocus_disk_v = v * defocus_radius;
-        }
-
         RayTraceResult ray_color_rgb(const ray& r, int depth, const hittable& world) const {
             color accumulated_color(0, 0, 0);
             color current_attenuation(1, 1, 1);
