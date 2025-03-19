@@ -78,13 +78,16 @@ class camera {
                 }
             }
             
-            std::vector<aabb> bboxes;
-            world.gather_internal_nodes(bboxes);
-            
-            for (const auto& box: bboxes) {
-                draw_box_edges(box, buffer, depth_buffer);
+            // show bvh edges in bvh mode
+            if (view_mode == 2) {
+                std::vector<aabb> bboxes;
+                world.gather_internal_nodes(bboxes);
+                
+                for (const auto& box: bboxes) {
+                    draw_box_edges(box, buffer, depth_buffer);
+                }
             }
-            
+
             // record end time
             auto end = std::chrono::high_resolution_clock::now();
             // calculate elapsed time
@@ -305,26 +308,22 @@ class camera {
         }
         
         RayTraceResult ray_color_bvh(const ray& r, int depth, const hittable& world) const {
-            // to do:
-            // if hit scatter object -> return color depending on angle relative to normal
-            // if hit emissive object -> return color emissive object
             ray current_ray = r;
-            double min_depth = infinity;
             hit_record rec;
 
             if (!world.hit(r, interval(0.001, infinity), rec))
                 return RayTraceResult();
-            // get intersection point and calculate OP. then dot with -w and compare against depth map
-            min_depth = rec.t;
-
-            double near_plane = 0.1;
-            double far_plane =  20.0;
-            double normalized_depth = (min_depth - near_plane) / (far_plane - near_plane);
             
-            normalized_depth = interval(0.0, 1.0).clamp(normalized_depth);
-            color depth_color = color(normalized_depth, normalized_depth, normalized_depth);
+            // get intersection point and calculate OP. 
+            // then dot with -w and compare against depth map
+            // seems that rec.t = dot(OP, -w) -> not sure why
+            vec3 OP = rec.p - lookfrom;
+            double cam_space_z = dot(OP, -w);
 
-            return RayTraceResult(depth_color, min_depth);
+            auto color_scale = 0.4 + 0.6 * std::abs(cos(rec.normal_angle));
+            color ray_color = color_scale * color(1.0, 1.0, 1.0);
+
+            return RayTraceResult(ray_color, cam_space_z);
         }
 };
 
