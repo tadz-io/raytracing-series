@@ -191,8 +191,7 @@ int main(int, char**)
             // Update texture with new render
             glBindTexture(GL_TEXTURE_2D, textureID);
             glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image_width, image_height, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data());
-            std::cout << "updating render" << std::endl;
-            std::cout << "New scene loaded. World size: " << world.objects.size() << std::endl;
+
             update_render = false; // Reset the flag
         }
         

@@ -44,3 +44,29 @@ class hittable {
             boxes.push_back(this->bounding_box());
         };
 };
+
+class translate : public hittable {
+    public:
+
+        translate(shared_ptr<hittable> object, const vec3& offset) 
+            : object(object), offset(offset)
+            {
+                bbox = object->bounding_box() + offset;
+            }
+
+        bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
+            ray offset_r(r.origin() - offset, r.direction());
+
+            if (!object->hit(offset_r, ray_t, rec))
+                return false;
+
+            rec.p += offset;
+
+            return true;
+        }
+
+    private:
+        shared_ptr<hittable> object;
+        vec3 offset;
+        aabb bbox;
+};
