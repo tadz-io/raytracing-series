@@ -10,41 +10,35 @@
 #include "quad.h"
 #include "scenes.h"
 
+// Define function type for scene setup
+typedef void (*SceneSetupFunc)(camera&, hittable_list&);
+
+// Scene options struct
+struct SceneOption {
+    const char* name;
+    SceneSetupFunc setup;
+};
+
 int main(int, char**)
 {
+    // Create an array of scene functions and their names
+    SceneOption scenes[] = {
+        {"Sand Box", sandbox},
+        {"Cornell Box", cornell_box},
+    };
+    int current_scene = 0;  // Start with Cornell Box
+
     hittable_list world;
-
-    // auto difflight = make_shared<diffuse_light>(color(4.0,4.0,4.0));
-    // auto checker         = make_shared<checker_texture>(1.0, color(.01, .01, .01), color(.9, .9, .9));
-    // auto material_ground = make_shared<lambertian>(checker);
-    // auto material_center = make_shared<lambertian>(color(0.1, 0.2, 0.5));
-    // auto material_left   = make_shared<dielectric>(1.50);
-    // auto material_bubble = make_shared<dielectric>(1.00 / 1.50);
-    // auto material_right  = make_shared<metal>(color(0.8, 0.8, 0.8), 0.0);
-    
-    // world.add(make_shared<sphere>(point3( 0.0, -1000.5, -1.0), 1000.0, material_ground));
-    // world.add(make_shared<sphere>(point3(-1.0,    0.0, -8.0),   0.5, material_left));
-    // world.add(make_shared<sphere>(point3( 0.0,    0.0, -2.0),   0.5, material_center));
-    // // world.add(make_shared<sphere>(point3( 1.0,    0.0, -1.0),   0.4, material_bubble));
-    // world.add(make_shared<sphere>(point3( 1.0,    0.0, -1.0),   0.5, material_right));
-    // world.add(make_shared<disk>  (point3( 0.0,    2.0,  -1.0), vec3(1.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0), difflight));
-
-    // world = hittable_list(make_shared<bvh_node>(world));
-
-    // double aspect_ratio {16.0 / 9.0};
-    // int image_width {800};
-    
+   
     camera cam;
-    cornell_box(cam, world);
-    // setup camera model
-    // camera cam(aspect_ratio, image_width);
-    // get image height
-    int image_height {cam.get_image_height()};  
-    int image_width {cam.image_width};
+    // Initialize with first scene
+    scenes[current_scene].setup(cam, world);
+    // sget image height
+    int image_height = cam.get_image_height();  
+    int image_width = cam.image_width;
 
     // create buffer to write rendered image to
     std::vector<uint32_t> buffer(image_width * image_height);
-
     // camera look from position
     point3 lookfrom = cam.lookfrom;
     // focal length
@@ -52,6 +46,7 @@ int main(int, char**)
     // sampling
     int samples_per_pixel = cam.samples_per_pixel;
     int max_depth = cam.max_depth;
+    
     // Setup window
     if (!glfwInit())
         return -1;
@@ -131,6 +126,40 @@ int main(int, char**)
         ImGui::NewFrame();
 
         ImGui::Begin("Settings");
+        
+        // Scene selection dropdown
+        if (ImGui::Combo("Scene", &current_scene, 
+            [](void* data, int idx, const char** out_text) {
+                SceneOption* scenes = (SceneOption*)data;
+                *out_text = scenes[idx].name;
+                return true;
+            }, 
+            scenes, IM_ARRAYSIZE(scenes))) 
+        {
+
+            // Clear the current world
+            world = hittable_list();
+            
+            // Load the selected scene
+            scenes[current_scene].setup(cam, world);
+            
+            // Update local variables with new camera settings
+            lookfrom = cam.lookfrom;
+            vfov = cam.vfov;
+            samples_per_pixel = cam.samples_per_pixel;
+            max_depth = cam.max_depth;
+            image_height = cam.get_image_height();
+            image_width = cam.image_width;
+            
+
+            buffer.resize(image_width * image_height);                
+            // Update OpenGL texture size
+            glBindTexture(GL_TEXTURE_2D, textureID);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+
+            update_render = true;
+        }
+        
         // toggle between rgb render and debug mode
         const char* render_modes[] = { "Normal", "Debug", "BVH"};
         static int current_mode = 0;  // 0 for normal, 1 for debug
@@ -162,7 +191,8 @@ int main(int, char**)
             // Update texture with new render
             glBindTexture(GL_TEXTURE_2D, textureID);
             glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image_width, image_height, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data());
-
+            std::cout << "updating render" << std::endl;
+            std::cout << "New scene loaded. World size: " << world.objects.size() << std::endl;
             update_render = false; // Reset the flag
         }
         
