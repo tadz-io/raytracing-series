@@ -101,6 +101,8 @@ void cornell_box_smoke(camera& cam, hittable_list& world) {
 
     cam.aspect_ratio      = 1.0;
     cam.image_width       = 600;
+    cam.initialize();
+    
     cam.samples_per_pixel = 1;
     cam.max_depth         = 1;
     cam.background        = color(0,0,0);
