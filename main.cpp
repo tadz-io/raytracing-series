@@ -25,6 +25,7 @@ int main(int, char**)
     SceneOption scenes[] = {
         {"Sand Box", sandbox},
         {"Cornell Box", cornell_box},
+        {"Cornell Box Smoke", cornell_box_smoke}
     };
     int current_scene = 0;  // Start with Cornell Box
 
