@@ -10,3 +10,8 @@
 # data files
 *.ppm
 imgui.ini
+*.csv
+
+# other build files
+importance_sampling
+pi
