@@ -60,7 +60,7 @@ void cornell_box(camera& cam, hittable_list& world) {
     world.add(box2);
 
     cam.aspect_ratio      = 1.0;
-    cam.image_width       = 600;
+    cam.image_width       = 300;
     cam.initialize();
 
     cam.samples_per_pixel = 2;
