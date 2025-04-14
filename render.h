@@ -290,9 +290,12 @@ class camera {
                 if (!rec.mat->scatter(current_ray, rec, scatter_attenuation, scattered)) {
                     break;
                 }
+
+                double scattering_pdf = rec.mat->scattering_pdf(current_ray, rec, scattered);
+                double pdf_value = scattering_pdf;
         
                 // Update the attenuation and continue with the scattered ray.
-                current_attenuation *= scatter_attenuation;
+                current_attenuation *= scatter_attenuation * scattering_pdf / pdf_value;
                 current_ray = scattered;
             }
             return RayTraceResult(accumulated_color, min_depth);
