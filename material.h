@@ -2,6 +2,7 @@
 
 #include "hittable.h"
 #include "texture.h"
+#include "onb.h"
 
 class material {
     public:
@@ -12,7 +13,7 @@ class material {
         }
 
         virtual bool scatter(
-            const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered)
+            const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered, double& pdf)
                 const {
                     return false;
                 }
@@ -28,16 +29,15 @@ class lambertian : public material {
         lambertian(const color& albedo) : tex(make_shared<solid_color>(albedo)) {}
         lambertian(shared_ptr<texture> tex) : tex(tex) {}
 
-        bool scatter(const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered)
+        bool scatter(
+            const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered, double& pdf)
         const override {
-            auto scatter_direction = rec.normal + random_unit_vector();
+            onb uvw(rec.normal);
+            auto scatter_direction = uvw.transform(random_cosine_direction());
             
-            // catch degenerate scatter direction
-            if (scatter_direction.near_zero())
-                scatter_direction = rec.normal;
-            
-            scattered = ray(rec.p, scatter_direction);
+            scattered = ray(rec.p, unit_vector(scatter_direction));
             attenuation = tex->value(rec.u, rec.v, rec.p);
+            pdf = dot(uvw.w(), scattered.direction()) / pi;
             return true;
         }
 
@@ -57,7 +57,7 @@ class metal : public material {
 
         metal(const color& albedo, double fuzz) : tex(make_shared<solid_color>(albedo)), fuzz(fuzz < 1 ? fuzz : 1) {}
 
-        bool scatter(const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered)
+        bool scatter(const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered, double& pdf)
         const override {
             vec3 reflected = reflect(r_in.direction(), rec.normal);
             reflected = reflected + fuzz * random_unit_vector() * reflected.length();
@@ -75,7 +75,7 @@ class dielectric : public material {
     public:
         dielectric(double refraction_index) : refraction_index(refraction_index) {}
 
-        bool scatter(const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered)
+        bool scatter(const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered, double& pdf)
         const override {
             attenuation = color(1, 1, 1);
             double ri = rec.front_face ? (1/refraction_index) : refraction_index;
@@ -125,12 +125,18 @@ class isotropic : public material {
         isotropic(const color& albedo) : tex(make_shared<solid_color>(albedo)) {}
         isotropic(shared_ptr<texture> tex) : tex(tex) {}
 
-        bool scatter(const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered)
+        bool scatter(const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered, double& pdf)
             const override {
                 scattered = ray(rec.p, random_unit_vector());
                 attenuation = tex->value(rec.u, rec.v, rec.p);
+                pdf = 1 / (4 * pi);
                 return true;
             }
+        
+        double scattering_pdf(const ray& r_in, const hit_record& rec, const ray& scattered)
+            const override {
+                return 1 / (4 * pi);
+        }
 
     private:
         shared_ptr<texture> tex;

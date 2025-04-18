@@ -286,13 +286,15 @@ class camera {
         
                 ray scattered;
                 color scatter_attenuation;
+                double pdf_value;
+
                 // If the material does not scatter, we end the loop.
-                if (!rec.mat->scatter(current_ray, rec, scatter_attenuation, scattered)) {
+                if (!rec.mat->scatter(current_ray, rec, scatter_attenuation, scattered, pdf_value)) {
                     break;
                 }
 
                 double scattering_pdf = rec.mat->scattering_pdf(current_ray, rec, scattered);
-                double pdf_value = scattering_pdf;
+                pdf_value = scattering_pdf;
         
                 // Update the attenuation and continue with the scattered ray.
                 current_attenuation *= scatter_attenuation * scattering_pdf / pdf_value;
@@ -313,7 +315,9 @@ class camera {
                 if (world.hit(current_ray, interval(0.001, infinity), rec)) {
                     ray scattered;
                     color attenuation;
-                    if (rec.mat->scatter(current_ray, rec, attenuation, scattered)) {
+                    double pdf_value;
+
+                    if (rec.mat->scatter(current_ray, rec, attenuation, scattered, pdf_value)) {
                         current_ray = scattered;
                     } else {
                         break;
