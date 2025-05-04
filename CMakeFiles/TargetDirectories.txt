@@ -1,0 +1,3 @@
+/Users/tadzio/git/raytracing-in-one-weekend/CMakeFiles/raytracer.dir
+/Users/tadzio/git/raytracing-in-one-weekend/CMakeFiles/edit_cache.dir
+/Users/tadzio/git/raytracing-in-one-weekend/CMakeFiles/rebuild_cache.dir
