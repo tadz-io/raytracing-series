@@ -222,8 +222,8 @@ CMAKE_STRIP:FILEPATH=/Library/Developer/CommandLineTools/usr/bin/strip
 //Path to a program.
 CMAKE_TAPI:FILEPATH=/Library/Developer/CommandLineTools/usr/bin/tapi
 
-//The CMake toolchain file
-CMAKE_TOOLCHAIN_FILE:FILEPATH=/Users/tadzio/git/vcpkg/scripts/buildsystems/vcpkg.cmake
+//No help, variable specified on the command line.
+CMAKE_TOOLCHAIN_FILE:UNINITIALIZED=/Users/tadzio/git/vcpkg/scripts/buildsystems/vcpkg.cmake
 
 //If this value is on, makefiles will be generated without the
 // .SILENT directive, and all commands will be echoed to the console
@@ -242,6 +242,9 @@ OPENGL_gl_LIBRARY:FILEPATH=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/S
 
 //OpenGL GLU library
 OPENGL_glu_LIBRARY:FILEPATH=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework
+
+//No help, variable specified on the command line.
+OpenGL_GL_PREFERENCE:UNINITIALIZED=LEGACY
 
 //Automatically copy dependencies into the output directory for
 // executables.

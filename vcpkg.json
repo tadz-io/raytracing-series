@@ -1,4 +1,6 @@
 {
+  "name": "raytracing-in-one-weekend",
+  "version-string": "0.1.0",
   "dependencies": [
     {
       "name": "imgui",
