@@ -282,7 +282,7 @@ class camera {
                 }
         
                 // Add emission from the hit point.
-                accumulated_color += current_attenuation * rec.mat->emitted(rec.u, rec.v, rec.p);
+                accumulated_color += current_attenuation * rec.mat->emitted(r, rec, rec.u, rec.v, rec.p);
         
                 ray scattered;
                 color scatter_attenuation;
