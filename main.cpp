@@ -30,6 +30,10 @@ int main(int, char**)
     int current_scene = 0;  // Start with Cornell Box
 
     hittable_list world;
+    // Light Sources
+    auto empty_material = shared_ptr<material>();
+    auto light = make_shared<diffuse_light>(color(15, 15, 15));
+    quad lights(point3(343,554,332), vec3(-130,0,0), vec3(0,0,-105), empty_material);
    
     camera cam;
     // Initialize with first scene
@@ -117,7 +121,7 @@ int main(int, char**)
         // If any arrow key was pressed, update the camera and re-render.
         if (updated) {
             cam.lookfrom = lookfrom;
-            cam.render(world, buffer);
+            cam.render(world, lights, buffer);
             update_render = true;
         }
 
@@ -139,8 +143,7 @@ int main(int, char**)
         {
 
             // Clear the current world
-            world = hittable_list();
-            
+            world = hittable_list();          
             // Load the selected scene
             scenes[current_scene].setup(cam, world);
             
@@ -187,8 +190,8 @@ int main(int, char**)
         ImGui::End();
 
         // render scene when updated
-        if (update_render) {
-            cam.render(world, buffer);
+        if (update_render) {           
+            cam.render(world, lights, buffer);
             // Update texture with new render
             glBindTexture(GL_TEXTURE_2D, textureID);
             glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image_width, image_height, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data());

@@ -52,7 +52,7 @@ class camera {
             return image_height;
         }
         
-        void render(const hittable& world, std::vector<u_int32_t>& buffer) {
+        void render(const hittable& world, const hittable& lights, std::vector<u_int32_t>& buffer) {
             initialize();
             
             // create buffer for depth map
@@ -70,7 +70,7 @@ class camera {
                     for (int s_j = 0; s_j < sqrt_spp; s_j++) {
                         for (int s_i = 0; s_i < sqrt_spp; s_i++){
                             ray r = get_ray(i, j, s_i, s_j);
-                            RayTraceResult result = ray_color(r, max_depth, world);
+                            RayTraceResult result = ray_color(r, max_depth, world, lights);
                             pixel_color += result.pixel_color;
                             min_depth = std::min(min_depth, result.depth);
                         }
@@ -155,8 +155,8 @@ class camera {
         }
         
         // Wrapper that selects between debug and normal views.
-        RayTraceResult ray_color(const ray& r, int depth, const hittable& world) const {
-            return (view_mode == 0) ? ray_color_rgb(r, depth, world) 
+        RayTraceResult ray_color(const ray& r, int depth, const hittable& world, const hittable& lights) const {
+            return (view_mode == 0) ? ray_color_rgb(r, depth, world, lights) 
             : (view_mode == 1) ? ray_color_debug(r, depth, world) 
             : ray_color_bvh(r, depth, world);
             
@@ -267,7 +267,7 @@ class camera {
         vec3 defocus_disk_u;        // defocus disk horizontal radius
         vec3 defocus_disk_v;        // defocus deisk vertical radius
         
-        RayTraceResult ray_color_rgb(const ray& r, int depth, const hittable& world) const {
+        RayTraceResult ray_color_rgb(const ray& r, int depth, const hittable& world, const hittable& lights) const {
             color accumulated_color(0, 0, 0);
             color current_attenuation(1, 1, 1);
             ray current_ray = r;
@@ -294,9 +294,9 @@ class camera {
                     break;
                 }
 
-                cosine_pdf surface_pdf(rec.normal);
-                scattered = ray(rec.p, surface_pdf.generate());             
-                pdf_value = surface_pdf.value(scattered.direction());
+                hittable_pdf light_pdf(lights, rec.p);
+                scattered = ray(rec.p, light_pdf.generate());             
+                pdf_value = light_pdf.value(scattered.direction());
         
                 double scattering_pdf = rec.mat->scattering_pdf(current_ray, rec, scattered);
         
