@@ -281,31 +281,32 @@ class camera {
                     accumulated_color += current_attenuation * background;
                     break;
                 }
-        
+                scatter_record srec;
                 // Add emission from the hit point.
                 accumulated_color += current_attenuation * rec.mat->emitted(r, rec, rec.u, rec.v, rec.p);
         
                 ray scattered;
-                color scatter_attenuation;
-                double pdf_value;
 
                 // If the material does not scatter, we end the loop.
-                if (!rec.mat->scatter(current_ray, rec, scatter_attenuation, scattered, pdf_value)) {
+                if (!rec.mat->scatter(current_ray, rec, srec)) {
                     break;
                 }
-
-                auto p0 = make_shared<hittable_pdf>(lights, rec.p);
-                auto p1 = make_shared<cosine_pdf>(rec.normal);
-                mixture_pdf mixed_pdf(p0, p1);
-
-                scattered = ray(rec.p, mixed_pdf.generate());             
-                pdf_value = mixed_pdf.value(scattered.direction());
-        
-                double scattering_pdf = rec.mat->scattering_pdf(current_ray, rec, scattered);
-        
-                // Update the attenuation and continue with the scattered ray.
-                current_attenuation *= scatter_attenuation * scattering_pdf / pdf_value;
-                current_ray = scattered;
+                
+                if (srec.skip_pdf) {
+                    current_attenuation *= srec.attenuation;
+                    current_ray = srec.skip_pdf_ray;
+                } else {
+                    auto light_ptr = make_shared<hittable_pdf>(lights, rec.p);
+                    mixture_pdf p(light_ptr, srec.pdf_ptr);
+    
+                    scattered = ray(rec.p, p.generate());             
+                    auto pdf_value = p.value(scattered.direction());
+            
+                    double scattering_pdf = rec.mat->scattering_pdf(current_ray, rec, scattered);
+                    // Update the attenuation and continue with the scattered ray.
+                    current_attenuation *= srec.attenuation * scattering_pdf / pdf_value;
+                    current_ray = scattered;
+                }
             }
             return RayTraceResult(accumulated_color, min_depth);
         }
@@ -321,10 +322,9 @@ class camera {
                 ++hit_test;
                 if (world.hit(current_ray, interval(0.001, infinity), rec)) {
                     ray scattered;
-                    color attenuation;
-                    double pdf_value;
+                    scatter_record srec;
 
-                    if (rec.mat->scatter(current_ray, rec, attenuation, scattered, pdf_value)) {
+                    if (rec.mat->scatter(current_ray, rec, srec)) {
                         current_ray = scattered;
                     } else {
                         break;

@@ -27,7 +27,7 @@ int main(int, char**)
         {"Cornell Box", cornell_box},
         {"Cornell Box Smoke", cornell_box_smoke}
     };
-    int current_scene = 0;  // Start with Cornell Box
+    int current_scene = 1;  // Start with Cornell Box
 
     hittable_list world;
     // Light Sources

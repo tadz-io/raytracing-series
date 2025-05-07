@@ -50,7 +50,8 @@ void cornell_box(camera& cam, hittable_list& world) {
 
    
     // boxes inside the cornell box
-    shared_ptr<hittable> box1 = box(point3(0,0,0), point3(165,330,165), white);
+    shared_ptr<material> aluminum = make_shared<metal>(color(0.8, 0.85, 0.88), 0.0);
+    shared_ptr<hittable> box1 = box(point3(0,0,0), point3(165,330,165), aluminum);
     box1 = make_shared<rotate_y>(box1, 15);
     box1 = make_shared<translate>(box1, vec3(265,0,295));
     world.add(box1);
