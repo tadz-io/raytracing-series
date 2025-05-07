@@ -20,6 +20,11 @@ void write_color(std::vector<uint32_t>& buffer, size_t index, const color& pixel
     auto g = pixel_color.y();
     auto b = pixel_color.z();
 
+    // replace NaN components with zero
+    if (r != r) r = 0.0;
+    if (g != g) g = 0.0;
+    if (b != b) b = 0.0;
+
     // apply gamma correction
     r = linear_to_gamma(r);
     g = linear_to_gamma(g);
