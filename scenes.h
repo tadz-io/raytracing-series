@@ -64,8 +64,8 @@ void cornell_box(camera& cam, hittable_list& world) {
     cam.image_width       = 300;
     cam.initialize();
 
-    cam.samples_per_pixel = 2;
-    cam.max_depth         = 2;
+    cam.samples_per_pixel = 10;
+    cam.max_depth         = 50;
     cam.background        = color(0,0,0);
 
     cam.vfov     = 40;
